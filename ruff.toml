@@ -1,0 +1,4 @@
+[lint]
+# Real errors only (syntax, undefined names, unused imports). No style
+# rules and no formatter: the codebase keeps its existing style.
+select = ["E9", "F"]

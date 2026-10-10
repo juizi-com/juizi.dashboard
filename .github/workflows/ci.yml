@@ -1,0 +1,31 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      # Rules live in ruff.toml: real errors only, no style or formatting.
+      - run: uvx ruff@0.11.13 check src
+
+  test:
+    runs-on: ubuntu-latest
+    env:
+      PLONE_VERSION: "6.1.5"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - name: Install Plone and this package
+        run: |
+          uv venv --python 3.12 .venv
+          uv pip install --python .venv/bin/python \
+            -c https://dist.plone.org/release/${PLONE_VERSION}/constraints.txt \
+            Products.CMFPlone plone.restapi plone.app.contenttypes zope.testrunner \
+            horse-with-no-namespace -e ".[test]"
+      - run: .venv/bin/zope-testrunner --test-path src
