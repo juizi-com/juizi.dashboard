@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<object name="portal_controlpanel">
+  <configlet title="Activity record settings" action_id="juizi-dashboard-settings"
+             appId="juizi.dashboard" category="Products" condition_expr=""
+             icon_expr="string:clock-history"
+             url_expr="string:${portal_url}/@@juizi-dashboard-settings" visible="True">
+    <permission>Manage portal</permission>
+  </configlet>
+</object>

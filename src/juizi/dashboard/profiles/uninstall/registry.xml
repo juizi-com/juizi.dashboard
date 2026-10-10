@@ -1,0 +1,5 @@
+<?xml version="1.0"?>
+<registry>
+  <records interface="juizi.dashboard.interfaces.IDashboardSettings"
+           prefix="juizi.dashboard" remove="true" />
+</registry>
