@@ -28,6 +28,7 @@ LABELS = {
     'group.member_added': 'Added to a group',
     'group.member_removed': 'Removed from a group',
     'profile.changed': 'Profile changed',
+    'roles.changed': 'Roles changed',
     'sharing.changed': 'Sharing changed',
     'content.created': 'Created',
     'content.copied': 'Copied',
@@ -69,6 +70,13 @@ def detail_text(entry):
         return 'Group: ' + (d.get('group_title') or d.get('group') or '')
     if event in ('profile.changed', 'content.edited'):
         return _fields(d.get('fields'))
+    if event == 'roles.changed':
+        parts = []
+        if d.get('added'):
+            parts.append('Given: ' + ', '.join(d['added']))
+        if d.get('removed'):
+            parts.append('Taken away: ' + ', '.join(d['removed']))
+        return '; '.join(parts)
     if event == 'sharing.changed':
         roles = '; '.join(f"{r['title'] or r['id']}: {', '.join(r['roles'])}"
                           for r in d.get('roles', []))
@@ -122,16 +130,20 @@ class RangeError(ValueError):
     pass
 
 
-def date_range(start=None, end=None, today=None, zone=None):
+def date_range(start=None, end=None, today=None, zone=None, days=None):
     """(from date, to date, first key, key after the last day), both days
-    inclusive, in the site's time zone. Default: the last 28 days."""
+    inclusive, in the site's time zone. `days` is the last N days up to
+    today. Default: the last 28 days."""
     zone = zone or site_zone()
     today = today or datetime.now(zone).date()
     try:
+        days = int(days) if days else 28
+        if not 1 <= days <= 3660:
+            raise ValueError(days)
         last = date.fromisoformat(end) if end else today
-        first = date.fromisoformat(start) if start else last - timedelta(days=27)
+        first = date.fromisoformat(start) if start else last - timedelta(days=days - 1)
     except (TypeError, ValueError):
-        raise RangeError('Dates must look like 2026-10-31.')
+        raise RangeError('Dates must look like 2026-10-31, and days must be 1 to 3660.')
     if first > last:
         raise RangeError('The start date is after the end date.')
     lo = key_for(datetime.combine(first, datetime.min.time(), zone))

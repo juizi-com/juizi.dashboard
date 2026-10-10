@@ -4,6 +4,6 @@
              appId="juizi.dashboard" category="Products" condition_expr=""
              icon_expr="string:clock-history"
              url_expr="string:${portal_url}/@@juizi-dashboard-settings" visible="True">
-    <permission>Manage portal</permission>
+    <permission>juizi.dashboard: Manage activity record settings</permission>
   </configlet>
 </object>

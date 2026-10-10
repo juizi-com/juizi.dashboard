@@ -90,13 +90,16 @@ previous Sharing entry for the same item.
 means hooking into the Sharing view and `@sharing` before they save, which is
 a patch.
 
-## D8. Content actions skip the record's own housekeeping
+## D8. Only content is recorded, and only where the add-on is installed
 
-- Only content (`IContentish`) is recorded.
-- Edits made while the add-on itself is being installed or uninstalled are
-  not recorded.
-- Content created by the site's own setup before the record existed was
-  never recorded, so there's nothing to skip there.
+- Only content (`IContentish`) is recorded, not tools, registry records or
+  other objects in the ZODB.
+- The add-on's code runs for every site in a Zope instance once it's in
+  the environment. Each handler first checks that the add-on is installed
+  on the current site, and does nothing otherwise, including when no site
+  is set at all, for example while another site is being created. The test
+  bench found this: creating a second site crashed until the check came
+  first.
 
 ## D9. Settings live in plone.registry; retention lives on the server
 
@@ -184,3 +187,115 @@ would get slower as the record grows. It isn't used.
 *Alternative:* `IDisableCSRFProtection` for the whole request. Rejected,
 because it would also switch the check off for whatever else that request
 writes.
+
+## D17. The record's own entries are never pruned
+
+Entries in the "record" category (add-on installed, uninstalled or
+reinstalled, recording switched on or off, settings changed, entries
+cleared, a person erased) are kept forever, and clearing never removes
+them. There are few of them, and they're the trail that shows whether
+anyone has interfered with the record.
+
+## D18. What erasing a person removes
+
+`erase --user ID`:
+- **Removes** account entries about the person: their logins and logouts,
+  their password and profile changes, their account's creation, and their
+  group memberships.
+- **Keeps, anonymised as "Erased user",** anything they did to other
+  accounts, to content or to the record, for example sharing changes they
+  made or another account they deleted.
+- **Anonymises** sharing entries that name them in their roles.
+- **Writes** a permanent note with the counts, without the person's id.
+
+*Alternative:* the PLIP's wording ("removes a person's account events").
+Read literally, that would also delete what an administrator did to other
+people's accounts, which is exactly the trail an audit needs to keep.
+
+## D19. Gaps, stated on the dashboard
+
+Core fires nothing for these, so they aren't recorded:
+- failed logins;
+- global role changes made in classic Users and Groups or the ZMI (those
+  made in Volto's Users screen are recorded: see D25);
+- password reset requests;
+- permission changes made in the ZMI.
+
+The dashboard says so under the list. A password set through a reset link
+*is* recorded, as "Password changed: set through a password reset link",
+because Plone fires its credentials event then.
+
+## D20. Presets send a number of days, not dates
+
+The dashboard sends `days=7|28|90`. The server works out the range from
+today in the site's time zone, so a browser in another time zone, or one
+just past midnight, still gets the site's "last 7 days". A custom range
+sends dates.
+
+## D21. A person filter is a click on a name
+
+- Clicking a person's name, in "Who" or as the account concerned, narrows
+  the list to entries they did or that concern them. A chip with × clears
+  it.
+- There's no person search box. Most people a site admin wants to look at
+  are already in the list.
+- This avoids an endpoint that lists every account name.
+
+## D22. Test bench: a `dashboard-test` site on payments-testbed
+
+juizi.dashboard isn't part of the payments family. But the bench is where
+Juizi's add-ons are tested on plain Volto, and one more site there costs
+nothing. The bench's changes are on its branch `feat/juizi-dashboard`. The
+site has juizi.dashboard only. Its frontend runs on :3004, one dev server at
+a time, as for the other sites.
+
+## D23. Uninstalled means unreadable from the website
+
+Once the add-on is uninstalled, `@activity` answers 404 to everyone,
+Manager included. The record is dormant: kept in the ZODB and readable only
+with the server script, or after reinstalling.
+
+The Volto add-on's Site Setup tile stays until the frontend is rebuilt
+without it, which is how Volto add-ons work:
+- a site administrator who opens it sees Volto's Unauthorized page, because
+  uninstalling takes their permission away;
+- Manager sees "The activity record is not installed on this site".
+
+*Alternative:* let Manager keep reading it. Rejected, because "uninstalled"
+should mean the website no longer shows it.
+
+## D24. Settings have their own permission, so site admins see the tile
+
+The settings configlet first used "Manage portal", which Site
+Administrator doesn't have in Plone 6. Site admins couldn't see the
+settings in Site Setup, even though plone.restapi let them save the form,
+because `@controlpanels` only asks for the Site Setup overview permission.
+The test bench found this.
+
+The configlet now uses its own permission, "juizi.dashboard: Manage
+activity record settings", given to Manager and Site Administrator.
+Uninstalling resets it to Manager only.
+
+collective.membership's settings tile uses "Manage portal" too, so site
+admins don't see it either. That's for the user to decide; it hasn't been
+changed.
+
+## D25. Global role changes from Volto's Users screen are recorded
+
+The test bench showed that plone.restapi's `@users` PATCH passes `roles`
+through `setMemberProperties`, which fires Plone's "properties updated"
+event, before it sets the roles. Without handling, that showed up as
+"Profile changed: Fields: roles".
+
+When that event carries `roles`:
+1. The recorder notes the user's directly given global roles.
+2. It compares them again in a before-commit hook.
+3. Only if they actually changed, it records "Roles changed" with what
+   was given and what was taken away.
+
+A change `@users` refuses (403, for example a site admin trying to give
+Manager) changes nothing, so nothing is recorded. "roles" is never listed
+as a profile field.
+
+Roles that come through groups aren't part of this. Group membership
+changes are recorded on their own.

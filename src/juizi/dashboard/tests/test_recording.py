@@ -66,6 +66,7 @@ class TestContent(RecordingBase):
         self.assertEqual(entry['detail']['transition'], 'publish')
         self.assertEqual(entry['detail']['comment'], 'Looks good')
         self.assertEqual(entry['detail']['to'], 'Published')
+        self.assertEqual(entry['detail']['transition_title'], 'Publish')
 
     def test_comment_text_can_be_left_out(self):
         api.portal.set_registry_record('juizi.dashboard.comment_text', False)
@@ -164,3 +165,23 @@ class TestAccounts(RecordingBase):
         entry = self.entries('settings.changed')[0]
         self.assertEqual(entry['detail'], {'setting': 'ip_addresses', 'old': 'full', 'new': 'off'})
         self.assertEqual(entry['category'], 'record')
+
+
+class TestNotInstalled(RecordingBase):
+
+    def test_no_site_no_entry_no_error(self):
+        from zope.component.hooks import getSite
+        from zope.component.hooks import setSite
+        from zope.lifecycleevent import ObjectAddedEvent
+        from juizi.dashboard import recorder
+        page = api.content.create(container=self.portal, type='Document', id='p', title='P')
+        before = len(self.record)
+        site = getSite()
+        setSite(None)
+        try:
+            self.new_request()
+            recorder.added(page, ObjectAddedEvent(page))
+            recorder.modified(page, ObjectModifiedEvent(page))
+        finally:
+            setSite(site)
+        self.assertEqual(len(self.record), before)

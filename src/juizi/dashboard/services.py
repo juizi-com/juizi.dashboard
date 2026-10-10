@@ -1,6 +1,7 @@
 """GET @activity: the record for site administrators (D15).
 
-Read-only. Parameters: from, to (YYYY-MM-DD, the site's time zone),
+Read-only. Parameters: from, to (YYYY-MM-DD, the site's time zone) or
+days (the last N days up to today),
 category (content, account, record), person (a user or group id), page,
 size, and format=csv for the download."""
 from plone.restapi.services import Service
@@ -14,6 +15,7 @@ from juizi.dashboard.present import to_csv
 from juizi.dashboard.record import CATEGORIES
 from juizi.dashboard.record import get_record
 from juizi.dashboard.record import retention_days
+from juizi.dashboard.recorder import installed
 from juizi.dashboard.recorder import setting
 
 import json
@@ -26,6 +28,12 @@ class Activity(Service):
     def render(self):
         self.check_permission()
         response = self.request.response
+        if not installed():
+            # Uninstalled: the record is dormant, readable by nobody (D23).
+            response.setStatus(404)
+            response.setHeader('Content-Type', 'application/json')
+            return json.dumps({'error': {'type': 'NotFound',
+                                         'message': 'juizi.dashboard is not installed.'}})
         try:
             result = self.handle()
         except RangeError as e:
@@ -42,7 +50,8 @@ class Activity(Service):
     def handle(self):
         form = self.request.form
         zone = site_zone()
-        first, last, lo, hi = date_range(form.get('from'), form.get('to'), zone=zone)
+        first, last, lo, hi = date_range(form.get('from'), form.get('to'), zone=zone,
+                                         days=form.get('days'))
         category = form.get('category') or None
         if category and category not in CATEGORIES:
             raise RangeError('Unknown category.')

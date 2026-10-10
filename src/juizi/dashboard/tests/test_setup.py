@@ -14,6 +14,7 @@ import json
 import unittest
 
 PERMISSION = 'juizi.dashboard: View site activity'
+SETTINGS = 'juizi.dashboard: Manage activity record settings'
 
 
 class TestSetup(unittest.TestCase):
@@ -25,8 +26,8 @@ class TestSetup(unittest.TestCase):
         setRoles(self.portal, TEST_USER_ID, ['Manager'])
         self.installer = self.portal.restrictedTraverse('@@installer')
 
-    def roles(self):
-        return sorted(r['name'] for r in self.portal.rolesOfPermission(PERMISSION)
+    def roles(self, permission=PERMISSION):
+        return sorted(r['name'] for r in self.portal.rolesOfPermission(permission)
                       if r['selected'])
 
     def events(self):
@@ -36,6 +37,7 @@ class TestSetup(unittest.TestCase):
     def test_installed(self):
         self.assertTrue(self.installer.is_product_installed('juizi.dashboard'))
         self.assertEqual(self.roles(), ['Manager', 'Site Administrator'])
+        self.assertEqual(self.roles(SETTINGS), ['Manager', 'Site Administrator'])
         self.assertTrue(api.portal.get_registry_record('juizi.dashboard.recording'))
         self.assertEqual(self.events(), ['addon.installed'])
         self.assertIn('juizi-dashboard-settings',
@@ -48,6 +50,7 @@ class TestSetup(unittest.TestCase):
         registry = getUtility(IRegistry)
         self.assertFalse([k for k in registry.records.keys() if k.startswith('juizi.dashboard')])
         self.assertEqual(self.roles(), ['Manager'])
+        self.assertEqual(self.roles(SETTINGS), ['Manager'])
         self.assertNotIn('juizi-dashboard-settings',
                          [a.getId() for a in self.portal.portal_controlpanel.listActions()])
         # Dormant: kept, and nothing more is written.
@@ -108,3 +111,4 @@ class TestServerScript(unittest.TestCase):
         lines = [json.loads(line) for line in out.getvalue().splitlines()]
         self.assertEqual([e['event'] for e in lines], ['addon.installed', 'content.created'])
         self.assertTrue(lines[0]['when'].endswith('Z'))
+

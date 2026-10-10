@@ -1,0 +1,17 @@
+{
+  "name": "volto-juizi-dashboard",
+  "version": "1.0.0-alpha.0",
+  "description": "Volto screen for juizi.dashboard: Site Setup → Activity, content and account activity by date range, with CSV download",
+  "main": "src/index.js",
+  "license": "GPL-2.0-only",
+  "keywords": ["volto-addon", "volto", "plone", "activity", "audit"],
+  "author": "Juizi",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/juizi-com/juizi.dashboard"
+  },
+  "peerDependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  }
+}

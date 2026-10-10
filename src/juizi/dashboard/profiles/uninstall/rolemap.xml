@@ -5,5 +5,8 @@
     <permission name="juizi.dashboard: View site activity" acquire="True">
       <role name="Manager" />
     </permission>
+    <permission name="juizi.dashboard: Manage activity record settings" acquire="True">
+      <role name="Manager" />
+    </permission>
   </permissions>
 </rolemap>

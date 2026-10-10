@@ -11,6 +11,10 @@
   <permission id="juizi.dashboard.ViewSiteActivity" title="juizi.dashboard: View site activity">
     <role name="Manager" />
   </permission>
+  <permission id="juizi.dashboard.ManageSettings"
+              title="juizi.dashboard: Manage activity record settings">
+    <role name="Manager" />
+  </permission>
 
   <genericsetup:registerProfile
       name="default"

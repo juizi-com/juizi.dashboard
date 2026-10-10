@@ -141,6 +141,8 @@ class TestActivityService(unittest.TestCase):
         old = self.events(**{'from': (today - timedelta(days=60)).isoformat(),
                              'to': (today - timedelta(days=30)).isoformat()})
         self.assertEqual(old['total'], 0)
+        week = self.events(days=7)
+        self.assertEqual(week['from'], (today - timedelta(days=6)).isoformat())
         default = self.events()
         self.assertEqual(default['from'], (today - timedelta(days=27)).isoformat())
         self.assertEqual(default['to'], today.isoformat())
@@ -152,6 +154,7 @@ class TestActivityService(unittest.TestCase):
                                                     'to': '2026-10-01'}).status_code, 400)
         self.assertEqual(s.get('@activity', params={'category': 'x'}).status_code, 400)
         self.assertEqual(s.get('@activity', params={'page': 'x'}).status_code, 400)
+        self.assertEqual(s.get('@activity', params={'days': '0'}).status_code, 400)
 
     def test_pagination(self):
         for i in range(7):
@@ -181,6 +184,8 @@ class TestActivityService(unittest.TestCase):
 
     def test_settings_control_panel(self):
         s = self.session('siteadmin')
+        listed = [p['@id'].rsplit('/', 1)[-1] for p in s.get('@controlpanels').json()]
+        self.assertIn('juizi-dashboard-settings', listed)  # site admins see the tile
         r = s.get('@controlpanels/juizi-dashboard-settings')
         self.assertEqual(r.status_code, 200, r.text)
         r = s.patch('@controlpanels/juizi-dashboard-settings', json={'ip_addresses': 'off'})
@@ -188,6 +193,29 @@ class TestActivityService(unittest.TestCase):
         items = self.events(category='record')['items']
         self.assertEqual(items[0]['detail'], 'IP addresses: full → off')
         self.assertEqual(items[0]['actor'], 'siteadmin')
+
+    def test_role_change_from_volto_users_panel(self):
+        s = self.session('siteadmin')
+        r = s.patch('@users/editor', json={'roles': {'Reviewer': True, 'Editor': False}})
+        self.assertEqual(r.status_code, 204, r.text)
+        items = self.events(category='account', person='editor')['items']
+        self.assertEqual(items[0]['label'], 'Roles changed')
+        self.assertEqual(items[0]['detail'], 'Given: Reviewer; Taken away: Editor')
+        self.assertEqual(items[0]['actor'], 'siteadmin')
+        self.assertNotIn('Profile changed', [i['label'] for i in items])
+
+    def test_refused_role_change_records_nothing(self):
+        r = self.session('siteadmin').patch('@users/editor', json={'roles': {'Manager': True}})
+        self.assertEqual(r.status_code, 403, r.text)
+        items = self.events(category='account', person='editor')['items']
+        self.assertNotIn('Roles changed', [i['label'] for i in items])
+
+    def test_uninstalled_record_is_not_served_even_to_manager(self):
+        self.portal.restrictedTraverse('@@installer').uninstall_product('juizi.dashboard')
+        transaction.commit()
+        r = self.admin().get('@activity')
+        self.assertEqual(r.status_code, 404)
+        self.assertIn('not installed', r.text)
 
 
 class TestSafeWrites(unittest.TestCase):

@@ -211,6 +211,8 @@ def logged_out(event):
 
 def credentials_updated(event):
     # event.password is the new password in clear text: never read it.
+    if not installed():
+        return
     subject = _principal_id(event.principal)
     actor = current_user_id()
     how = 'reset' if not actor else ('self' if actor == subject else 'admin')
@@ -237,25 +239,75 @@ def group_deleted(event):
 
 
 def added_to_group(event):
+    if not installed():
+        return
     _account('group.member_added', _principal_id(event.principal),
              detail={'group': event.group_id, 'group_title': person_name(event.group_id)})
 
 
 def removed_from_group(event):
+    if not installed():
+        return
     _account('group.member_removed', _principal_id(event.principal),
              detail={'group': event.group_id, 'group_title': person_name(event.group_id)})
 
 
 def properties_updated(event):
-    subject = _principal_id(event.principal)
-    # A new account's first properties belong to "account created".
-    if subject is None or _was_seen(('created', subject)) or _seen(('properties', subject)):
+    if not installed():
         return
-    fields = sorted(getattr(event, 'properties', None) or {})
-    _account('profile.changed', subject, detail={'fields': fields})
+    subject = _principal_id(event.principal)
+    if subject is None:
+        return
+    fields = set(getattr(event, 'properties', None) or {})
+    if 'roles' in fields:
+        # plone.restapi's @users passes roles through here before setting
+        # them; the actual change is compared at commit (D25).
+        fields.discard('roles')
+        _watch_roles(subject)
+    # A new account's first properties belong to "account created".
+    if not fields or _was_seen(('created', subject)) or _seen(('properties', subject)):
+        return
+    _account('profile.changed', subject, detail={'fields': sorted(fields)})
 
 
-# Content actions
+def _direct_roles(site, user_id):
+    """Global roles given to the user directly (not through a group)."""
+    manager = getattr(site.acl_users, 'portal_role_manager', None)
+    user = site.acl_users.getUserById(user_id)
+    if manager is None or user is None:
+        return set()
+    return set(manager.getRolesForPrincipal(user)) - {'Authenticated'}
+
+
+def _watch_roles(user_id):
+    """Record a global role change, if there is one, when the transaction
+    commits: what was asked for may still be refused."""
+    if _seen(('roles', user_id)):
+        return
+    import transaction
+    from zope.component.hooks import setSite
+    site = getSite()
+    before = _direct_roles(site, user_id)
+    actor = current_user_id()
+
+    def compare():
+        previous = getSite()
+        setSite(site)
+        try:
+            after = _direct_roles(site, user_id)
+            added, removed = sorted(after - before), sorted(before - after)
+            if added or removed:
+                write(ACCOUNT, 'roles.changed', actor=actor, subject=user_id,
+                      detail={'added': added, 'removed': removed})
+        finally:
+            setSite(previous)
+
+    transaction.get().addBeforeCommitHook(compare)
+
+
+# Content actions. Every handler checks installed() before anything else:
+# the add-on is loaded for every site in the Zope instance, and events also
+# fire with no site at all (while another site is being created).
 
 def _content(obj, event_name, detail=None, once=None):
     if not installed() or not IContentish.providedBy(obj):
@@ -268,6 +320,8 @@ def _content(obj, event_name, detail=None, once=None):
 
 def copied(obj, event):
     # The copy is about to be added; "created" notes where it came from.
+    if not installed():
+        return
     request = getRequest()
     if request is not None:
         IAnnotations(request).setdefault('juizi.dashboard.copies', {})[id(aq_base(obj))] = (
@@ -275,7 +329,7 @@ def copied(obj, event):
 
 
 def added(obj, event):
-    if obj is not event.object:
+    if obj is not event.object or not installed():
         return  # inside a pasted folder: the folder's entry covers it (D6)
     request = getRequest()
     copies = IAnnotations(request).get('juizi.dashboard.copies', {}) if request else {}
@@ -290,7 +344,7 @@ def added(obj, event):
 
 
 def modified(obj, event):
-    if IContainerModifiedEvent.providedBy(event) or _is_sharing(event):
+    if IContainerModifiedEvent.providedBy(event) or _is_sharing(event) or not installed():
         return
     fields = []
     for description in getattr(event, 'descriptions', ()) or ():
@@ -308,7 +362,10 @@ def transitioned(obj, event):
     comment = status.get('comments') or ''
     detail = {
         'transition': event.transition.getId(),
-        'transition_title': event.transition.title or event.transition.getId(),
+        # The menu's name ("Publish"), not the long title ("Reviewer
+        # publishes content").
+        'transition_title': (getattr(event.transition, 'actbox_name', '')
+                             or event.transition.title or event.transition.getId()),
         'from': event.old_state.title or event.old_state.getId(),
         'to': event.new_state.title or event.new_state.getId(),
     }
@@ -319,6 +376,8 @@ def transitioned(obj, event):
 
 def moved(obj, event):
     if IObjectAddedEvent.providedBy(event) or IObjectRemovedEvent.providedBy(event):
+        return
+    if not installed():
         return
     if obj is not event.object or event.oldParent is None or event.newParent is None:
         return
