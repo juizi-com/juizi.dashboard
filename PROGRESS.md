@@ -21,8 +21,34 @@ DECISIONS.md first, then continue from the first unfinished item.
       (`make -C e2e dashboard`), audit in `e2e/reports/dashboard-*/audit.md`.
       Server script run by hand on the bench: export, clear, purge.
 
+## Decisions review (2026-10-11): done
+
+All decisions (D2–D25) were reviewed with the user. Changes made during the
+review:
+- **D4:** each item's content type is shown, as the Add-menu name.
+- **D6:** folder moves, copies and renames note the items inside.
+- **D7:** Sharing changes show what was given and taken away.
+- **D11:** the list shows times in the site's time zone.
+- **D18:** erasure keeps admins' actions on the person's account,
+  anonymised.
+- **D21:** a Person box suggests people from the record.
+- **D24:** collective.membership stays Manager-only (membership#25).
+
+Also done after the first build:
+- the layout (Type, When, Who with IP, What, Details);
+- the 800px width;
+- numbered pagination;
+- links that open in a new tab;
+- phone cards;
+- WCAG 2.2 AA checks with axe.
+
+Possible extensions are in the README: failed logins through LoginLockout,
+and site activity.
+
 ## Waiting for the user
 
-- Review DECISIONS.md (D2–D25) and the browser audit.
-- Merge the PR once tested, then decide about a release and installing on
-  the first client site.
+- Test PR #1 on the bench (http://localhost:3004/controlpanel/activity),
+  then merge.
+- Decide about a release and the first client install.
+- The shared dashboard style's active-tab contrast (#007bff, 3.97:1) and
+  numbered pagination in the other dashboards were raised, not changed.

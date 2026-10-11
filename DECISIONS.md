@@ -436,3 +436,5 @@ as a profile field.
 
 Roles that come through groups aren't part of this. Group membership
 changes are recorded on their own.
+
+**Review 2026-10-11: confirmed.**
