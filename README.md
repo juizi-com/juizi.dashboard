@@ -74,7 +74,13 @@ site owner handles separately.
 
 ## What isn't recorded
 
-Plone fires no event for these:
+Content types hidden from search (Site Setup → Search) aren't recorded: those
+are add-ons' internal records, such as collective.membership's. Sharing
+changes are recorded for every type. A recording error never blocks what
+someone is doing. It's written to the server log, and that action has no
+entry.
+
+Plone fires no event for these, so they aren't recorded either:
 - failed logins;
 - role changes made in classic Users and Groups or the ZMI;
 - password reset requests;

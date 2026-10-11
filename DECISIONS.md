@@ -81,8 +81,16 @@ list is read. A type removed since shows its id.
 ## D5. Keys are microseconds × 1000 plus a random 0–999
 
 An entry's key is its UTC time in microseconds, times 1000, plus a random
-suffix. This is the PLIP's "timestamp with a random suffix": concurrent
-writes land in different BTree buckets, and a date range is a plain key range.
+suffix. This is the PLIP's "timestamp with a random suffix", and a date
+range is a plain key range.
+
+*Corrected 2026-10-11:* an earlier version of this said the suffix spreads
+concurrent writes across BTree buckets. It doesn't, because keys are
+time-ordered and new entries land in the last bucket. What the suffix does
+is keep two writes in the same microsecond from wanting the same key.
+Concurrent appends to the same bucket are mostly resolved by the BTree's
+own conflict resolution, and Zope retries the rest. That's fine at client
+scale. Load-test it before a very busy site.
 The largest key, around 1.8 × 10¹⁸, fits a signed 64-bit `LOBTree` key until
 the year 2262. If a key is already taken, the next free one is used.
 
@@ -438,3 +446,48 @@ Roles that come through groups aren't part of this. Group membership
 changes are recorded on their own.
 
 **Review 2026-10-11: confirmed.**
+
+## D26. Content types hidden from search aren't recorded
+
+Types listed in Site Setup → Search → "types not searched"
+(`plone.types_not_searched`) are left out of content actions: created,
+copied, edited, workflow changes, moved, renamed, deleted. Add-ons list
+their storage types there. On a site with collective.membership, every
+sign-up would otherwise appear as "Created" entries for its Member and
+Membership records, by Anonymous, titled with the person's name.
+
+Sharing changes are still recorded for every type, because they're about
+access.
+
+An admin who wants a type recorded removes it from that list (which also
+makes it searchable). An admin who wants a type left out adds it.
+
+*Alternative:* a setting of our own listing types not to record. That's
+more control, but one more setting to explain. The search list already
+says "this is internal".
+
+**Raised in the security review, 2026-10-11, and built at the user's
+request.**
+
+## D27. A recording problem never blocks the action
+
+Every handler runs inside the user's own save, login or role change, as
+does the commit-time roles check (D25). An error escaping from one would
+make that action fail: an editor's save refused, a login broken.
+
+Every handler is therefore guarded:
+- an error is logged ("juizi.dashboard could not record …; the action
+  went through without an entry"), and the action goes through without
+  its entry;
+- database conflicts still propagate, so Zope retries the request as
+  usual.
+
+Tests force an error in a content save, a workflow change and a role
+change, and check that each goes through.
+
+*Trade-off:* the record can miss an entry when something goes wrong, but
+the miss shows up in the server log. For a client site, the site working
+matters more than a complete trail.
+
+**Raised in the security review, 2026-10-11, and built at the user's
+request.**

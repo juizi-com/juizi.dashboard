@@ -225,6 +225,16 @@ class TestActivityService(unittest.TestCase):
         self.assertEqual(items[0]['actor'], 'siteadmin')
         self.assertNotIn('Profile changed', [i['label'] for i in items])
 
+    def test_role_change_goes_through_when_recording_fails(self):
+        from unittest import mock
+        from juizi.dashboard import recorder
+        with mock.patch.object(recorder, '_direct_roles', side_effect=RuntimeError('boom')):
+            r = self.session('siteadmin').patch('@users/editor',
+                                                json={'roles': {'Reviewer': True}})
+        self.assertEqual(r.status_code, 204, r.text)
+        transaction.begin()
+        self.assertIn('Reviewer', api.user.get_roles(username='editor'))
+
     def test_refused_role_change_records_nothing(self):
         r = self.session('siteadmin').patch('@users/editor', json={'roles': {'Manager': True}})
         self.assertEqual(r.status_code, 403, r.text)

@@ -19,17 +19,40 @@ from zope.container.interfaces import IContainerModifiedEvent
 from zope.globalrequest import getRequest
 from zope.lifecycleevent.interfaces import IObjectAddedEvent
 from zope.lifecycleevent.interfaces import IObjectRemovedEvent
+from ZODB.POSException import ConflictError
 
 from juizi.dashboard.record import ACCOUNT
 from juizi.dashboard.record import CONTENT
 from juizi.dashboard.record import get_record
 from juizi.dashboard.record import RECORD
 
+import functools
 import logging
 
 logger = logging.getLogger('juizi.dashboard')
 
 PREFIX = 'juizi.dashboard.'
+
+
+def guarded(handler):
+    """A recording problem never blocks the action being recorded (D27).
+
+    Every event handler, and the commit-time roles check, runs inside the
+    user's own save, login or role change: an error escaping from here
+    would make that fail. Errors are logged and the action goes through
+    without its entry. Database conflicts still propagate, so Zope retries
+    the whole request as it normally would."""
+    @functools.wraps(handler)
+    def wrapper(*args, **kwargs):
+        try:
+            return handler(*args, **kwargs)
+        except ConflictError:
+            raise
+        except Exception:
+            logger.exception('juizi.dashboard could not record %s; the action went '
+                             'through without an entry', handler.__name__)
+            return None
+    return wrapper
 REQUEST_KEY = 'juizi.dashboard.seen'
 _CURRENT = object()
 
@@ -44,6 +67,11 @@ def installed():
     """The add-on is installed on the current site (its settings exist)."""
     registry = _registry()
     return registry is not None and registry.get(PREFIX + 'recording', None) is not None
+
+
+def setting_global(name):
+    registry = _registry()
+    return registry.get(name, None) if registry is not None else None
 
 
 def setting(name, default=None):
@@ -199,16 +227,19 @@ def _account(event_name, principal, actor=_CURRENT, detail=None):
     write(ACCOUNT, event_name, actor=actor, subject=subject, detail=detail)
 
 
+@guarded
 def logged_in(event):
     user_id = _principal_id(event.principal)
     _account('login', user_id, actor=user_id)
 
 
+@guarded
 def logged_out(event):
     user_id = _principal_id(event.principal)
     _account('logout', user_id, actor=user_id)
 
 
+@guarded
 def credentials_updated(event):
     # event.password is the new password in clear text: never read it.
     if not installed():
@@ -219,6 +250,7 @@ def credentials_updated(event):
     _account('password.changed', subject, actor=actor, detail={'how': how})
 
 
+@guarded
 def principal_created(event):
     subject = _principal_id(event.principal)
     if _seen(('created', subject)):
@@ -226,18 +258,22 @@ def principal_created(event):
     _account('account.created', subject)
 
 
+@guarded
 def principal_deleted(event):
     _account('account.deleted', _principal_id(event.principal))
 
 
+@guarded
 def group_created(event):
     _account('group.created', _principal_id(event.principal))
 
 
+@guarded
 def group_deleted(event):
     _account('group.deleted', _principal_id(event.principal))
 
 
+@guarded
 def added_to_group(event):
     if not installed():
         return
@@ -245,6 +281,7 @@ def added_to_group(event):
              detail={'group': event.group_id, 'group_title': person_name(event.group_id)})
 
 
+@guarded
 def removed_from_group(event):
     if not installed():
         return
@@ -252,6 +289,7 @@ def removed_from_group(event):
              detail={'group': event.group_id, 'group_title': person_name(event.group_id)})
 
 
+@guarded
 def properties_updated(event):
     if not installed():
         return
@@ -290,6 +328,7 @@ def _watch_roles(user_id):
     before = _direct_roles(site, user_id)
     actor = current_user_id()
 
+    @guarded
     def compare():
         previous = getSite()
         setSite(site)
@@ -309,8 +348,15 @@ def _watch_roles(user_id):
 # the add-on is loaded for every site in the Zope instance, and events also
 # fire with no site at all (while another site is being created).
 
+def _hidden_type(obj):
+    """Types the site hides from search (Site Setup → Search) aren't
+    recorded: add-ons' storage records, such as membership's (D26)."""
+    hidden = setting_global('plone.types_not_searched') or ()
+    return getattr(aq_base(obj), 'portal_type', None) in hidden
+
+
 def _content(obj, event_name, detail=None, once=None):
-    if not installed() or not IContentish.providedBy(obj):
+    if not installed() or not IContentish.providedBy(obj) or _hidden_type(obj):
         return
     item = _item(obj)
     if once and _seen((once, item['uid'] or item['path'])):
@@ -318,6 +364,7 @@ def _content(obj, event_name, detail=None, once=None):
     write(CONTENT, event_name, item=item, detail=detail)
 
 
+@guarded
 def copied(obj, event):
     # The copy is about to be added; "created" notes where it came from.
     if not installed():
@@ -328,6 +375,7 @@ def copied(obj, event):
             _item(event.original)['path'])
 
 
+@guarded
 def added(obj, event):
     if obj is not event.object or not installed():
         return  # inside a pasted folder: the folder's entry covers it (D6)
@@ -344,6 +392,7 @@ def added(obj, event):
         _content(obj, 'content.created', once='created')
 
 
+@guarded
 def modified(obj, event):
     if IContainerModifiedEvent.providedBy(event) or _is_sharing(event) or not installed():
         return
@@ -356,6 +405,7 @@ def modified(obj, event):
              once='edited')
 
 
+@guarded
 def transitioned(obj, event):
     if event.transition is None:
         return  # the initial state, set when an item is created
@@ -375,6 +425,7 @@ def transitioned(obj, event):
     _content(obj, 'content.transition', detail=detail)
 
 
+@guarded
 def moved(obj, event):
     if IObjectAddedEvent.providedBy(event) or IObjectRemovedEvent.providedBy(event):
         return
@@ -410,6 +461,7 @@ def _descendants(obj):
     return count
 
 
+@guarded
 def will_be_removed(obj, event):
     if obj is not event.object or not installed():
         return  # inside a deleted folder: the folder's entry counts it (D6)
@@ -438,6 +490,7 @@ def _role_changes(before, after, names):
     return changes
 
 
+@guarded
 def sharing_changed(obj, event):
     """The roles now, and, once the record has seen this item's roles
     before, what was given and taken away (D7)."""
@@ -473,6 +526,7 @@ def sharing_changed(obj, event):
 
 # The record's own settings (D10)
 
+@guarded
 def settings_changed(settings, event):
     name = event.record.fieldName
     if name == 'recording':

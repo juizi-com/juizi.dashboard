@@ -211,3 +211,41 @@ class TestFolderContents(RecordingBase):
         self.new_request()
         api.content.rename(obj=page, new_id='q')
         self.assertNotIn('inside', self.entries('content.renamed')[-1]['detail'])
+
+
+class TestFailSafe(RecordingBase):
+    """A recording error never blocks the action (D27)."""
+
+    def test_error_is_logged_and_the_action_goes_through(self):
+        from unittest import mock
+        from juizi.dashboard import recorder
+        with mock.patch.object(recorder, 'write', side_effect=RuntimeError('boom')), \
+                self.assertLogs('juizi.dashboard', level='ERROR') as logs:
+            page = api.content.create(container=self.portal, type='Document', id='p',
+                                      title='P')
+            api.content.transition(obj=page, transition='publish')
+        self.assertEqual(api.content.get_state(page), 'published')
+        self.assertIn('could not record added', logs.output[0])
+
+    def test_conflicts_still_propagate(self):
+        from unittest import mock
+        from ZODB.POSException import ConflictError
+        from juizi.dashboard import recorder
+        with mock.patch.object(recorder, 'write', side_effect=ConflictError()):
+            with self.assertRaises(ConflictError):
+                api.content.create(container=self.portal, type='Document', id='p', title='P')
+
+
+class TestHiddenTypes(RecordingBase):
+    """Types hidden from search aren't recorded (D26)."""
+
+    def test_hidden_type_not_recorded(self):
+        hidden = tuple(api.portal.get_registry_record('plone.types_not_searched'))
+        api.portal.set_registry_record('plone.types_not_searched', hidden + ('News Item',))
+        news = api.content.create(container=self.portal, type='News Item', id='n', title='N')
+        self.new_request()
+        api.content.transition(obj=news, transition='publish')
+        api.content.delete(obj=news)
+        api.content.create(container=self.portal, type='Document', id='p', title='P')
+        titles = [e['title'] for e in self.entries() if e['category'] == 'content']
+        self.assertEqual(titles, ['P'])

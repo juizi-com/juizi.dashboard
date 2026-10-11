@@ -42,6 +42,14 @@ Also done after the first build:
 - phone cards;
 - WCAG 2.2 AA checks with axe.
 
+Then, from the security review the user asked for (2026-10-11):
+- **D27:** recording is fail-safe. A recording error is logged and never
+  blocks the action.
+- **D26:** types hidden from search aren't recorded, so membership's
+  storage records don't flood the list.
+- **D5:** the wording is corrected (time-ordered keys append to the last
+  bucket).
+
 Possible extensions are in the README: failed logins through LoginLockout,
 and site activity.
 
