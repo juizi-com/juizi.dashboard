@@ -92,16 +92,26 @@ def erase(record, person, by=None):
                 changed[field], changed[name] = ERASED_ID, ERASED_NAME
         record.replace(key, changed)
         anonymised += 1
-    # Sharing entries name people in their detail, not as actor or subject.
+    # Sharing entries name people in their detail, not as actor or subject,
+    # and the record remembers each item's last roles (D7).
+    def scrub(people):
+        return [dict(r, id=ERASED_ID, title=ERASED_NAME) if r.get('id') == person else r
+                for r in people]
+
     for key in record.select(category=ACCOUNT):
         entry = record.entries[key]
-        roles = (entry.get('detail') or {}).get('roles')
-        if roles and any(r.get('id') == person for r in roles):
-            changed = dict(entry, detail=dict(entry['detail'], roles=[
-                dict(r, id=ERASED_ID, title=ERASED_NAME) if r.get('id') == person else r
-                for r in roles]))
-            record.replace(key, changed)
+        detail = entry.get('detail') or {}
+        lists = {f: detail[f] for f in ('roles', 'given', 'taken') if detail.get(f)}
+        if any(r.get('id') == person for people in lists.values() for r in people):
+            record.replace(key, dict(entry, detail=dict(
+                detail, **{f: scrub(people) for f, people in lists.items()})))
             anonymised += 1
+    memory = record.sharing_memory()
+    for uid, last in list(memory.items()):
+        if person in last['roles']:
+            roles = dict(last['roles'])
+            roles[ERASED_ID] = roles.pop(person)
+            memory[uid] = dict(last, roles=roles)
     _note(record, 'record.erased', {'removed': removed, 'anonymised': anonymised,
                                     'operator': by or operator()})
     return removed, anonymised

@@ -105,16 +105,34 @@ separate note under the change ("With 4 items inside"). In the CSV the
 note is added to the Details cell. So an admin knows there were items
 inside, even though those items have no entries of their own.
 
-## D7. Sharing changes record the roles as they stand afterwards
+## D7. Sharing changes show what was given and taken away
 
-Plone's Sharing event says only that local roles changed, not what changed.
-The entry stores the item's local roles after the change, leaving out Owner,
-for example "Editors: Editor; jane: Reviewer". Admins can compare it with the
-previous Sharing entry for the same item.
+Plone's Sharing event says only that local roles changed, not what
+changed. The record therefore remembers each item's local roles at its
+last Sharing change (Owner left out), in a small lookup table by UID
+(`last_sharing`). The next Sharing change on that item is compared with
+them:
 
-*Alternative:* snapshot the roles before each change. Rejected because that
-means hooking into the Sharing view and `@sharing` before they save, which is
-a patch.
+> Given: Eddie Editor (Editor); Taken away: Eddie Editor (Reviewer)
+> *Roles now: Eddie Editor (Editor)*
+
+- **Inheritance:** blocking or restoring inherited roles is shown too.
+- **The first change the record sees on an item** can't be compared with
+  anything. It shows "Roles now: …", with a note that the earlier roles
+  weren't recorded.
+- **Deleting** an item drops it from the lookup table.
+- **Erasing a person** replaces them there too (D18).
+- **Records made before this existed** get the table the first time it's
+  used. No upgrade step is needed.
+
+*Alternative 1, the original build:* store only the roles as they stand
+afterwards, and leave admins to compare two entries by eye.
+
+*Alternative 2:* snapshot the roles before each change, by hooking into
+the Sharing view and `@sharing` before they save. That's a patch.
+
+**Review 2026-10-11: changed to this middle way** (the user's choice: "the
+most helpful").
 
 ## D8. Only content is recorded, and only where the add-on is installed
 

@@ -78,10 +78,18 @@ def detail_text(entry):
             parts.append('Taken away: ' + ', '.join(d['removed']))
         return '; '.join(parts)
     if event == 'sharing.changed':
-        roles = '; '.join(f"{r['title'] or r['id']}: {', '.join(r['roles'])}"
-                          for r in d.get('roles', []))
-        text = roles or 'No roles given on this item'
-        return text if d.get('inherit', True) else text + ' (inherited roles blocked)'
+        if 'given' not in d:
+            # The first change the record saw on this item: roles as they are.
+            return 'Roles now: ' + _sharing_now(d)
+        parts = []
+        if d['given']:
+            parts.append('Given: ' + _roles(d['given']))
+        if d['taken']:
+            parts.append('Taken away: ' + _roles(d['taken']))
+        if d.get('inherit_changed'):
+            parts.append('Inherited roles ' + ('restored' if d.get('inherit', True)
+                                               else 'blocked'))
+        return '; '.join(parts) or 'No change to roles'
     if event == 'content.transition':
         text = f"{d.get('transition_title')}: {d.get('from')} → {d.get('to')}"
         if 'comment' in d:
@@ -106,9 +114,25 @@ def detail_text(entry):
     return ''
 
 
+def _roles(changes):
+    return '; '.join(f"{r['title'] or r['id']} ({', '.join(r['roles'])})"
+                     for r in changes)
+
+
+def _sharing_now(d):
+    text = _roles(d.get('roles', [])) or 'no roles given on this item'
+    return text if d.get('inherit', True) else text + ', inherited roles blocked'
+
+
 def note_text(entry):
-    """A folder's contents, noted under the change (D6)."""
-    n = (entry.get('detail') or {}).get('inside')
+    """Noted under the change: a folder's contents (D6), or a Sharing
+    change's full list of roles afterwards (D7)."""
+    d = entry.get('detail') or {}
+    if entry['event'] == 'sharing.changed':
+        if 'given' not in d:
+            return 'Earlier roles on this item weren\'t recorded, so the change itself isn\'t shown.'
+        return 'Roles now: ' + _sharing_now(d)
+    n = d.get('inside')
     return f"With {n} item{'s' if n != 1 else ''} inside" if n else ''
 
 

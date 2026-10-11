@@ -100,6 +100,7 @@ class TestServerScript(unittest.TestCase):
         self.assertEqual(removed, 1)  # account created
         self.assertEqual(anonymised, 1)  # the sharing entry names her
         dump = repr(list(self.record.entries.values()))
+        dump += repr(dict(self.record.sharing_memory()))
         self.assertNotIn('jane', dump)
         self.assertNotIn('Jane Doe', dump)
         self.assertEqual(list(self.record.entries.values())[-1]['event'], 'record.erased')

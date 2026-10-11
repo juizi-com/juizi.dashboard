@@ -73,6 +73,15 @@ class ActivityRecord(Persistent):
         # filter shows what they did and what was done to their account.
         self.by_person = OOBTree()
         self.count = Length()
+        self.last_sharing = OOBTree()
+
+    def sharing_memory(self):
+        """Each item's local roles at its last Sharing change (D7), by UID.
+        Records made before this existed get it on first use."""
+        memory = getattr(self, 'last_sharing', None)
+        if memory is None:
+            memory = self.last_sharing = OOBTree()
+        return memory
 
     # Writing
 

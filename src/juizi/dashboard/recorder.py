@@ -415,6 +415,10 @@ def will_be_removed(obj, event):
         return  # inside a deleted folder: the folder's entry counts it (D6)
     inside = _descendants(obj)
     _content(obj, 'content.deleted', detail={'inside': inside} if inside else None)
+    record = get_record(getSite())
+    uid = getattr(aq_base(obj), 'UID', None)
+    if record is not None and callable(uid):
+        record.sharing_memory().pop(uid(), None)
 
 
 # Sharing
@@ -424,18 +428,47 @@ def _is_sharing(event):
     return ILocalrolesModifiedEvent.providedBy(event)
 
 
+def _role_changes(before, after, names):
+    """[{id, title, roles}] for roles in `after` that `before` didn't have."""
+    changes = []
+    for principal in sorted(after):
+        added = sorted(set(after[principal]) - set(before.get(principal, ())))
+        if added:
+            changes.append({'id': principal, 'title': names[principal], 'roles': added})
+    return changes
+
+
 def sharing_changed(obj, event):
+    """The roles now, and, once the record has seen this item's roles
+    before, what was given and taken away (D7)."""
     if not installed():
         return
-    roles = []
+    record = get_record(getSite())
+    if record is None:
+        return
+    current = {}
     for principal, assigned in obj.get_local_roles():
         assigned = sorted(r for r in assigned if r != 'Owner')
         if assigned:
-            roles.append({'id': principal, 'title': person_name(principal),
-                          'roles': assigned})
-    detail = {'roles': roles,
-              'inherit': not getattr(aq_base(obj), '__ac_local_roles_block__', False)}
-    write(ACCOUNT, 'sharing.changed', item=_item(obj), detail=detail)
+            current[principal] = assigned
+    names = {p: person_name(p) for p in current}
+    inherit = not getattr(aq_base(obj), '__ac_local_roles_block__', False)
+    item = _item(obj)
+    detail = {'roles': [{'id': p, 'title': names[p], 'roles': current[p]}
+                        for p in sorted(current)],
+              'inherit': inherit}
+    memory = record.sharing_memory()
+    key = item['uid'] or item['path']
+    previous = memory.get(key)
+    if previous is not None:
+        before = previous['roles']
+        names.update({p: person_name(p) for p in before if p not in names})
+        detail['given'] = _role_changes(before, current, names)
+        detail['taken'] = _role_changes(current, before, names)
+        if previous['inherit'] != inherit:
+            detail['inherit_changed'] = True
+    memory[key] = {'roles': current, 'inherit': inherit}
+    write(ACCOUNT, 'sharing.changed', item=item, detail=detail)
 
 
 # The record's own settings (D10)

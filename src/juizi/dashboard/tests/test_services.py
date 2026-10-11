@@ -129,11 +129,29 @@ class TestActivityService(unittest.TestCase):
         items = [i for i in self.events()['items'] if i['event'] != 'login']
         self.assertEqual([i['label'] for i in items[:3]],
                          ['Sharing changed', 'Edited', 'Created'])
-        self.assertEqual(items[0]['detail'], 'Editor: Editor')
+        # The first change the record sees on an item: roles as they are.
+        self.assertEqual(items[0]['detail'], 'Roles now: Editor (Editor)')
+        self.assertIn("Earlier roles on this item weren't recorded", items[0]['note'])
         self.assertEqual(items[1]['detail'], 'Fields: title')
         self.assertEqual(items[2]['path'], '/news')
         self.assertEqual(items[2]['type'], 'Document')
         self.assertEqual(items[2]['type_title'], 'Page')
+
+    def test_sharing_shows_what_changed(self):
+        s = self.admin()
+        s.post('/', json={'@type': 'Document', 'id': 'minutes', 'title': 'Minutes'})
+        s.post('minutes/@sharing', json={'entries': [
+            {'id': 'editor', 'type': 'user', 'roles': {'Editor': True}}]})
+        r = s.post('minutes/@sharing', json={'inherit': False, 'entries': [
+            {'id': 'editor', 'type': 'user', 'roles': {'Editor': False}},
+            {'id': 'siteadmin', 'type': 'user', 'roles': {'Reviewer': True}}]})
+        self.assertEqual(r.status_code, 204, r.text)
+        latest = [i for i in self.events(category='account')['items']
+                  if i['event'] == 'sharing.changed'][0]
+        self.assertEqual(latest['detail'], 'Given: Siteadmin (Reviewer); '
+                         'Taken away: Editor (Editor); Inherited roles blocked')
+        self.assertEqual(latest['note'],
+                         'Roles now: Siteadmin (Reviewer), inherited roles blocked')
 
     def test_date_range_and_category(self):
         api.content.create(container=self.portal, type='Document', id='p', title='P')
