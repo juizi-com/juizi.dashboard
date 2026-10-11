@@ -99,6 +99,12 @@ The same goes for creating an item: Volto's create fires "added" and then
 "modified" in the same request. Only "created" is kept. One request records
 at most one entry per item for each kind of action.
 
+**Review 2026-10-11: confirmed.** Added in the review: deleting, moving,
+copying or renaming a folder notes how many items it took with it, as a
+separate note under the change ("With 4 items inside"). In the CSV the
+note is added to the Details cell. So an admin knows there were items
+inside, even though those items have no entries of their own.
+
 ## D7. Sharing changes record the roles as they stand afterwards
 
 Plone's Sharing event says only that local roles changed, not what changed.

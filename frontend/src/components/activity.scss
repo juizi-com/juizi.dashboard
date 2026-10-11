@@ -119,6 +119,14 @@
     margin-top: 4px;
   }
 
+  // A note on the change, e.g. how many items a folder took with it.
+  &__note {
+    margin-top: 4px;
+    color: #6c757d;
+    font-size: 13px;
+    font-style: italic;
+  }
+
   // Colours meet WCAG AA contrast for small bold text.
   &__badge {
     display: inline-block;

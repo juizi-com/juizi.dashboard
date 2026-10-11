@@ -185,3 +185,29 @@ class TestNotInstalled(RecordingBase):
         finally:
             setSite(site)
         self.assertEqual(len(self.record), before)
+
+
+class TestFolderContents(RecordingBase):
+    """Moves, copies and renames note what a folder took with it (D6)."""
+
+    def test_folder_notes(self):
+        from juizi.dashboard.present import note_text
+        folder = api.content.create(container=self.portal, type='Folder', id='f', title='F')
+        target = api.content.create(container=self.portal, type='Folder', id='t', title='T')
+        api.content.create(container=folder, type='Document', id='a', title='A')
+        api.content.create(container=folder, type='Document', id='b', title='B')
+        self.new_request()
+        api.content.rename(obj=folder, new_id='g')
+        self.new_request()
+        api.content.move(source=self.portal['g'], target=target)
+        self.new_request()
+        api.content.copy(source=target['g'], target=self.portal)
+        for event in ('content.renamed', 'content.moved', 'content.copied'):
+            entry = self.entries(event)[0]
+            self.assertEqual(entry['detail']['inside'], 2, event)
+            self.assertEqual(note_text(entry), 'With 2 items inside')
+        self.new_request()
+        page = api.content.create(container=self.portal, type='Document', id='p', title='P')
+        self.new_request()
+        api.content.rename(obj=page, new_id='q')
+        self.assertNotIn('inside', self.entries('content.renamed')[-1]['detail'])

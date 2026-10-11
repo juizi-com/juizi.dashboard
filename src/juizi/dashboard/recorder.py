@@ -338,7 +338,8 @@ def added(obj, event):
     # Creating fires "modified" too, in the same request (D6).
     _seen(('edited', key))
     if source:
-        _content(obj, 'content.copied', detail={'from': source}, once='created')
+        _content(obj, 'content.copied', detail=_with_inside({'from': source}, obj),
+                 once='created')
     else:
         _content(obj, 'content.created', once='created')
 
@@ -382,11 +383,20 @@ def moved(obj, event):
     if obj is not event.object or event.oldParent is None or event.newParent is None:
         return
     if aq_base(event.oldParent) is aq_base(event.newParent):
-        _content(obj, 'content.renamed', detail={'from': event.oldName, 'to': event.newName})
+        _content(obj, 'content.renamed',
+                 detail=_with_inside({'from': event.oldName, 'to': event.newName}, obj))
         return
     site_path = '/'.join(getSite().getPhysicalPath())
     old = '/'.join(event.oldParent.getPhysicalPath() + (event.oldName,))[len(site_path):]
-    _content(obj, 'content.moved', detail={'from': old})
+    _content(obj, 'content.moved', detail=_with_inside({'from': old}, obj))
+
+
+def _with_inside(detail, obj):
+    """Adds how many items a folder carried with it (D6)."""
+    inside = _descendants(obj)
+    if inside:
+        detail['inside'] = inside
+    return detail
 
 
 def _descendants(obj):

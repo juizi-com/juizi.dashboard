@@ -464,6 +464,9 @@ const ActivityDashboard = () => {
                   {item.detail && (
                     <div className="juizi-activity__detail">{item.detail}</div>
                   )}
+                  {item.note && (
+                    <div className="juizi-activity__note">{item.note}</div>
+                  )}
                 </td>
               </tr>
             ))}

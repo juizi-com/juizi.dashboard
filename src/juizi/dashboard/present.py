@@ -94,9 +94,6 @@ def detail_text(entry):
         return 'From ' + (d.get('from') or '')
     if event == 'content.copied':
         return 'Copy of ' + (d.get('from') or '')
-    if event == 'content.deleted' and d.get('inside'):
-        n = d['inside']
-        return f"With {n} item{'s' if n != 1 else ''} inside"
     if event == 'settings.changed':
         name = SETTING_LABELS.get(d.get('setting'), d.get('setting'))
         return f"{name}: {_value(d.get('old'))} → {_value(d.get('new'))}"
@@ -107,6 +104,12 @@ def detail_text(entry):
         return (f"{d.get('removed', 0)} entries removed and {d.get('anonymised', 0)} "
                 f"anonymised, by {d.get('operator') or 'the server operator'}")
     return ''
+
+
+def note_text(entry):
+    """A folder's contents, noted under the change (D6)."""
+    n = (entry.get('detail') or {}).get('inside')
+    return f"With {n} item{'s' if n != 1 else ''} inside" if n else ''
 
 
 def _value(value):
@@ -178,6 +181,7 @@ def row(key, entry):
         'type': entry.get('type') or '',
         'type_title': type_title(entry.get('type')),
         'detail': detail_text(entry),
+        'note': note_text(entry),
         'ip': entry.get('ip') or '',
     }
 
@@ -202,7 +206,8 @@ def to_csv(record, keys, zone=None):
             r['when'], local, r['label'], CATEGORY_LABELS.get(r['category'], r['category']),
             r['actor_name'] or ('Anonymous' if not r['actor'] else r['actor']),
             r['actor'] or '', r['subject_name'], r['subject'] or '', r['title'], r['path'],
-            r['type_title'], r['detail'], r['ip'])])
+            r['type_title'], '; '.join(t for t in (r['detail'], r['note']) if t),
+            r['ip'])])
     if len(keys) > CSV_LIMIT:
         writer.writerow([f'Cut off: this range holds {len(keys)} entries; the first '
                          f'{CSV_LIMIT}, newest first, are above. The server script '
