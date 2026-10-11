@@ -145,6 +145,10 @@ most helpful").
   bench found this: creating a second site crashed until the check came
   first.
 
+**Review 2026-10-11: confirmed, content only for now.** Site activity
+(control panel changes, other add-ons installed or uninstalled, types and
+workflows changed) is noted in the README as a possible extension.
+
 ## D9. Settings live in plone.registry; retention lives on the server
 
 **Registry settings (Site Setup → Activity record settings):**

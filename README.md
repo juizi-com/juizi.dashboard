@@ -72,9 +72,21 @@ Plone fires no event for these:
 
 Global role changes made in Volto's Users screen *are* recorded.
 
-**Possible later:** failed logins through Products.LoginLockout as an
-optional integration (DECISIONS.md, D2). When LoginLockout is installed, its
-failed login attempts would appear on the dashboard.
+## Possible extensions
+
+- **Failed logins** through Products.LoginLockout, as an optional
+  integration (DECISIONS.md, D2). When LoginLockout is installed, its
+  failed login attempts would appear on the dashboard.
+- **Site activity** (DECISIONS.md, D8). Plone already fires events for
+  these, so no patches are needed:
+  - control panel changes, for example "Site setting changed: Mail → SMTP
+    server", with names only and never values, because some settings are
+    secrets such as the mail password. One entry per save.
+  - other add-ons installed or uninstalled;
+  - content types and workflows changed in Site Setup.
+
+  These would answer questions like "who switched on self-registration?" or
+  "who installed that add-on?".
 
 ## Development
 
