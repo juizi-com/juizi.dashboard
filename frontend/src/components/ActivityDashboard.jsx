@@ -91,7 +91,10 @@ const Concerning = ({ item, onPick }) => {
         ) : (
           <NewTab to={item.path}>{label}</NewTab>
         )}
-        <div className="juizi-dashboard__muted">{item.path}</div>
+        <div className="juizi-dashboard__muted">
+          {item.type_title && `${item.type_title} · `}
+          {item.path}
+        </div>
       </>
     );
   }

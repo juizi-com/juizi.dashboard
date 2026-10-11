@@ -151,6 +151,17 @@ def date_range(start=None, end=None, today=None, zone=None, days=None):
     return first, last, lo, hi
 
 
+def type_title(portal_type):
+    """The name editors see in the Add menu ("Page" for Document). A type
+    removed since keeps its id."""
+    if not portal_type:
+        return ''
+    from Products.CMFCore.utils import getToolByName
+    from zope.component.hooks import getSite
+    info = getToolByName(getSite(), 'portal_types').getTypeInfo(portal_type)
+    return (info.Title() if info is not None else '') or portal_type
+
+
 def row(key, entry):
     return {
         'id': str(key),
@@ -165,6 +176,7 @@ def row(key, entry):
         'title': entry.get('title') or '',
         'path': entry.get('path') or '',
         'type': entry.get('type') or '',
+        'type_title': type_title(entry.get('type')),
         'detail': detail_text(entry),
         'ip': entry.get('ip') or '',
     }
@@ -190,7 +202,7 @@ def to_csv(record, keys, zone=None):
             r['when'], local, r['label'], CATEGORY_LABELS.get(r['category'], r['category']),
             r['actor_name'] or ('Anonymous' if not r['actor'] else r['actor']),
             r['actor'] or '', r['subject_name'], r['subject'] or '', r['title'], r['path'],
-            r['type'], r['detail'], r['ip'])])
+            r['type_title'], r['detail'], r['ip'])])
     if len(keys) > CSV_LIMIT:
         writer.writerow([f'Cut off: this range holds {len(keys)} entries; the first '
                          f'{CSV_LIMIT}, newest first, are above. The server script '

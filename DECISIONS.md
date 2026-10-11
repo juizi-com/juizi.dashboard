@@ -60,7 +60,8 @@ The record is one persistent object under the annotation key
 `juizi.dashboard.record`:
 
 - an `LOBTree` of entries, keyed by time;
-- `LLTreeSet` indexes by category, by event type and by who did it;
+- `LLTreeSet` indexes by category, and by person (whoever did it or whom
+  it concerns);
 - a `BTrees.Length` count.
 
 Annotations aren't touched by uninstalling a profile. That's what keeps the
@@ -70,6 +71,12 @@ ZMI's object listings, and they're included in the normal ZODB backup.
 *Alternative:* a separate ZODB mount point, as the PLIP allows for busy
 sites. Not needed at client scale, and it can be added later without
 changing the record's code.
+
+**Review 2026-10-11: confirmed.** Raised in the review: show each item's
+content type, so an admin helping an editor can see what kind of item it
+was. Entries already stored the type's id. The dashboard and CSV now show
+its name as editors see it ("Page", not "Document"), looked up when the
+list is read. A type removed since shows its id.
 
 ## D5. Keys are microseconds × 1000 plus a random 0–999
 

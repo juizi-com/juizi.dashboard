@@ -132,6 +132,8 @@ class TestActivityService(unittest.TestCase):
         self.assertEqual(items[0]['detail'], 'Editor: Editor')
         self.assertEqual(items[1]['detail'], 'Fields: title')
         self.assertEqual(items[2]['path'], '/news')
+        self.assertEqual(items[2]['type'], 'Document')
+        self.assertEqual(items[2]['type_title'], 'Page')
 
     def test_date_range_and_category(self):
         api.content.create(container=self.portal, type='Document', id='p', title='P')
@@ -177,6 +179,7 @@ class TestActivityService(unittest.TestCase):
         self.assertEqual(rows[0][0], 'When (UTC)')
         self.assertEqual(rows[1][2], 'Created')
         self.assertEqual(rows[1][8], '\'=HYPERLINK("http://evil.example","x")')
+        self.assertEqual(rows[1][10], 'Page')
 
     def test_csv_needs_the_permission(self):
         r = self.session('editor').get('@activity', params={'format': 'csv'})
