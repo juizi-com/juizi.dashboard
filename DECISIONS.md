@@ -178,6 +178,10 @@ The add-on writes "Add-on installed", "Add-on uninstalled" and "Add-on
 reinstalled" entries. Between an uninstall and a reinstall the record
 shows a visible gap.
 
+**Review 2026-10-11: confirmed.** Known gap, documented: granting the
+dashboard's permission to another role in the ZMI isn't recorded, because
+Plone fires no event for permission changes. It needs Manager access.
+
 ## D11. Times are stored in UTC and shown in the site's time zone
 
 - Entries are stored in UTC.

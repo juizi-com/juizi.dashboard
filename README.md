@@ -68,7 +68,8 @@ about them and replaces their name with "Erased user" in everything else.
 Plone fires no event for these:
 - failed logins;
 - role changes made in classic Users and Groups or the ZMI;
-- password reset requests.
+- password reset requests;
+- permission changes in the ZMI, including who may see this dashboard.
 
 Global role changes made in Volto's Users screen *are* recorded.
 
