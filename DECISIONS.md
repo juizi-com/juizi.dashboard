@@ -263,6 +263,8 @@ would get slower as the record grows. It isn't used.
 because it would also switch the check off for whatever else that request
 writes.
 
+**Review 2026-10-11: confirmed.**
+
 ## D17. The record's own entries are never pruned
 
 Entries in the "record" category (add-on installed, uninstalled or
