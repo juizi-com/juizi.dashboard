@@ -206,6 +206,9 @@ leading `'`, so a spreadsheet doesn't run it as a formula. Titles and
 profile names are typed by users, and an admin opening the file is exactly
 the person such a formula would target.
 
+**Review 2026-10-11: confirmed.** Accepted cost: harmless titles that start
+with -, + or @ show a leading apostrophe in the CSV (not on screen).
+
 ## D13. A CSV download stops at 100,000 rows
 
 - A download includes at most 100,000 rows, newest first.
