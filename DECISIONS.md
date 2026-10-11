@@ -334,6 +334,8 @@ today in the site's time zone, so a browser in another time zone, or one
 just past midnight, still gets the site's "last 7 days". A custom range
 sends dates.
 
+**Review 2026-10-11: confirmed.**
+
 ## D21. A person filter is a click on a name
 
 - Clicking a person's name, in "Who" or as the account concerned, narrows
