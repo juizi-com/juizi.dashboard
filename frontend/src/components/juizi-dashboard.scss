@@ -1,0 +1,581 @@
+// The Juizi dashboard style, copied from juizi-blocks
+// (frontend/packages/volto-juizi-blocks/src/theme/juizi-blocks.scss at
+// b786f37), because this add-on works on plain Volto and can't depend on
+// juizi-blocks. Keep the values in step with that file: every Juizi
+// dashboard should look the same. Local addition: .juizi-dashboard--wide.
+
+.juizi-dashboard {
+  max-width: 800px;
+  padding: 20px;
+  margin: 0 auto;
+
+  h1 {
+    margin-bottom: 8px;
+    font-size: 24px;
+  }
+
+  h2 {
+    margin: 0 0 8px;
+    font-size: 18px;
+  }
+
+  h3 {
+    margin: 0 0 8px;
+    font-size: 15px;
+  }
+
+  &__description {
+    margin-bottom: 24px;
+    color: #666;
+  }
+
+  &__help,
+  &__muted,
+  &__hint {
+    color: #6c757d;
+    font-size: 12px;
+  }
+
+  &__help {
+    margin: 0 0 16px;
+  }
+
+  &__hint--warning {
+    color: #c62828;
+  }
+
+  &__error {
+    padding: 12px 16px;
+    border-radius: 4px;
+    margin-bottom: 16px;
+    background: #fdecea;
+    color: #c62828;
+
+    ul {
+      padding-left: 20px;
+      margin: 4px 0 0;
+    }
+  }
+
+  &__unsaved {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    padding: 12px 16px;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    margin-bottom: 16px;
+    background: #f8f9fa;
+    font-size: 14px;
+    gap: 8px;
+
+    > span {
+      margin-right: auto;
+    }
+  }
+
+  // ---- Buttons ----
+
+  &__btn {
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 18px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 14px;
+    gap: 6px;
+
+    &:disabled {
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+
+    &--primary {
+      background: #007bff;
+      color: #fff;
+
+      &:hover:not(:disabled) {
+        background: #0056b3;
+      }
+
+      &:disabled {
+        background: #6c9bd1;
+        opacity: 1;
+      }
+    }
+
+    &--secondary {
+      background: #e9ecef;
+      color: #212529;
+
+      &:hover:not(:disabled) {
+        background: #dee2e6;
+      }
+    }
+
+    &--danger {
+      background: #fdecea;
+      color: #c62828;
+
+      &:hover:not(:disabled) {
+        background: #f8d7da;
+      }
+    }
+
+    &--icon {
+      padding: 6px 8px;
+    }
+  }
+
+  &__link-button {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: #1a73e8;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: inherit;
+    text-decoration: underline;
+
+    &:hover {
+      color: #0b57d0;
+    }
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    margin-top: 16px;
+    gap: 8px;
+  }
+
+  // ---- Badges ----
+
+  &__badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 11px;
+    font-weight: 700;
+    gap: 4px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    white-space: nowrap;
+
+    &--on {
+      background: #2e7d32;
+      color: #fff;
+    }
+
+    &--off {
+      background: #e9ecef;
+      color: #6c757d;
+    }
+  }
+
+  // ---- Tabs ----
+
+  &__tabs {
+    display: flex;
+    border-bottom: 1px solid #dee2e6;
+    gap: 24px;
+  }
+
+  &__tab {
+    padding: 8px 0;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    background: none;
+    color: #333;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+
+    &:hover,
+    &--active {
+      color: #007bff;
+    }
+
+    &--active {
+      border-bottom-color: #007bff;
+    }
+  }
+
+  // ---- Cards ----
+
+  &__section {
+    padding: 24px;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    margin-top: 16px;
+    background: #f8f9fa;
+  }
+
+  &__group + &__group {
+    margin-top: 24px;
+  }
+
+  &__group h3 .juizi-dashboard__muted {
+    font-weight: 400;
+  }
+
+  // ---- Form controls ----
+
+  &__input,
+  &__select,
+  &__opacity {
+    box-sizing: border-box;
+    padding: 6px 10px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    background: #fff;
+    font-family: inherit;
+    font-size: 14px;
+
+    &:focus {
+      border-color: #007bff;
+      box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.2);
+      outline: none;
+    }
+
+    &[aria-invalid='true'] {
+      border-color: #c62828;
+      background: #fdecea;
+    }
+  }
+
+  &__input {
+    width: 100%;
+    min-width: 0;
+  }
+
+  &__select {
+    min-width: 0;
+  }
+
+  &__opacity {
+    width: 4.5rem;
+  }
+
+  input[type='checkbox'] {
+    width: 16px;
+    height: 16px;
+    flex: 0 0 auto;
+    margin: 0;
+    accent-color: #007bff;
+    cursor: pointer;
+  }
+
+  &__check,
+  &__toggle {
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+    gap: 8px;
+  }
+
+  // "Who can add it": collapsed summary, opens to group checkboxes.
+  &__groups {
+    margin-top: 6px;
+    font-size: 13px;
+
+    summary {
+      color: #1a73e8;
+      cursor: pointer;
+    }
+
+    fieldset {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      padding: 8px 12px;
+      border: 1px solid #dee2e6;
+      border-radius: 4px;
+      margin: 6px 0 0;
+      background: #fff;
+      gap: 6px;
+    }
+
+    legend {
+      padding: 0;
+      margin-bottom: 4px;
+    }
+  }
+
+  &__group-option {
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+    gap: 8px;
+  }
+
+  // A control with its label attached on the left: [Label|input].
+  &__inline-field {
+    display: flex;
+    min-width: 0;
+    flex: 1 1 150px;
+
+    > span {
+      display: flex;
+      align-items: center;
+      padding: 0 10px;
+      border: 1px solid #ced4da;
+      border-radius: 4px 0 0 4px;
+      border-right: 0;
+      background: #e9ecef;
+      color: #333;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .juizi-dashboard__input {
+      border-radius: 0 4px 4px 0;
+    }
+  }
+
+  &__field {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    font-size: 14px;
+    gap: 6px;
+
+    > span:first-child {
+      color: #333;
+      font-size: 13px;
+      font-weight: 600;
+    }
+  }
+
+  // ---- Tables ----
+
+  &__table {
+    width: 100%;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    background: #fff;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 14px;
+
+    th,
+    td {
+      padding: 8px 12px;
+      border-bottom: 1px solid #e0e0e0;
+      text-align: left;
+      vertical-align: middle;
+    }
+
+    th {
+      color: #333;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    tbody tr:last-child td {
+      border-bottom: 0;
+    }
+
+    // Per-block grids: ruled columns and a heading column.
+    &--grid {
+      th + th,
+      td + td {
+        border-left: 1px solid #e0e0e0;
+      }
+
+      td:first-child {
+        font-weight: 600;
+      }
+    }
+  }
+
+  // Beats the th/td alignment above.
+  &__table &__cell--center {
+    text-align: center;
+  }
+
+  &__table &__cell--fit {
+    width: 1%;
+    white-space: nowrap;
+  }
+
+  &__matrix {
+    overflow-x: auto;
+  }
+
+  // A switched-off block: dim its icon and text, keep the toggle usable.
+  &__row--off td:not(:last-child) {
+    opacity: 0.45;
+  }
+
+  // ---- Colour and theme lists ----
+
+  &__list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  &__list > &__actions {
+    margin-top: 0;
+  }
+
+  &__entry {
+    display: grid;
+    align-items: start;
+    padding: 16px;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    background: #fff;
+    gap: 16px;
+    grid-template-columns: 1fr;
+
+    @media (min-width: 768px) {
+      grid-template-columns: 140px 1fr;
+    }
+  }
+
+  &__entry-fields {
+    min-width: 0;
+  }
+
+  &__entry-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: stretch;
+    margin-bottom: 16px;
+    gap: 8px;
+  }
+
+  &__row-actions {
+    display: flex;
+    margin-left: auto;
+    gap: 4px;
+  }
+
+  &__entry-grid {
+    display: grid;
+    gap: 16px;
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  }
+
+  &__swatch {
+    display: flex;
+    min-height: 100px;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 4px;
+    font-size: 2rem;
+    font-weight: 700;
+  }
+
+  &__color-inputs,
+  &__slot {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    gap: 6px;
+
+    input[type='color'] {
+      width: 2.25rem;
+      height: 2.25rem;
+      flex: 0 0 auto;
+      padding: 0;
+      border: 1px solid #ced4da;
+      border-radius: 4px;
+      background: none;
+    }
+
+    .juizi-dashboard__select {
+      flex: 1;
+    }
+  }
+
+  &__preview {
+    display: flex;
+    flex-direction: column;
+    padding: 16px;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 4px;
+    background: var(--theme-color);
+    color: var(--theme-foreground-color);
+    gap: 6px;
+  }
+
+  &__preview-muted {
+    color: var(--theme-low-contrast-foreground-color);
+    font-size: 0.9em;
+  }
+
+  &__preview-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    border-radius: 4px;
+    margin-top: 6px;
+    background: var(--theme-high-contrast-color, transparent);
+    gap: 8px;
+  }
+
+  &__chip {
+    display: inline-block;
+    width: 0.9rem;
+    height: 0.9rem;
+    flex: 0 0 auto;
+    border: 1px solid rgba(0, 0, 0, 0.25);
+    border-radius: 50%;
+    margin-right: 0.35rem;
+    vertical-align: middle;
+  }
+
+  // ---- Footer ----
+
+  // Credit on the left, version on the right; on small screens both are
+  // centred with the version on top. The doubled class outranks the theme's
+  // own paragraph and link rules (e.g. `.content-area p > a`).
+  & &__version-footer {
+    display: flex;
+    flex-direction: column-reverse;
+    align-items: center;
+    padding-top: 12px;
+    border-top: 1px solid #e0e0e0;
+    margin-top: 32px;
+    color: #9e9e9e;
+    font-size: 12px;
+    font-weight: 400;
+    gap: 4px;
+    line-height: 1.5;
+    text-align: center;
+
+    @media (min-width: 768px) {
+      flex-direction: row;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    // The credit link reads as plain footer text, in every state.
+    a,
+    a:visited,
+    a:hover,
+    a:focus,
+    a:active {
+      color: inherit;
+      font-size: inherit;
+      font-weight: inherit;
+      line-height: inherit;
+      text-decoration: none;
+    }
+  }
+}
+
+// Local addition: dashboards with wide tables or a list beside a record.
+.juizi-dashboard.juizi-dashboard--wide {
+  max-width: 1200px;
+}

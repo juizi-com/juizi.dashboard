@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<rolemap>
+  <permissions>
+    <permission name="juizi.dashboard: View site activity" acquire="True">
+      <role name="Manager" />
+      <role name="Site Administrator" />
+    </permission>
+    <permission name="juizi.dashboard: Manage activity record settings" acquire="True">
+      <role name="Manager" />
+      <role name="Site Administrator" />
+    </permission>
+  </permissions>
+</rolemap>

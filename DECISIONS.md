@@ -34,6 +34,15 @@ this add-on unchanged.
 *Alternative:* auditlog as the store, with our own view on top. Rejected
 because of the SQL server and an old SQLAlchemy pin.
 
+**Review 2026-10-11: confirmed, no dependencies for now.**
+
+**Option for later: failed logins through LoginLockout.** Make LoginLockout
+an optional integration, not a dependency. When it's installed, the
+dashboard would show its failed login attempts, for example as "Login
+failed" entries under People. This reopens D1's "no failed logins", and
+it's the realistic way to get them before the PLIP's core event exists,
+without patching Plone.
+
 ## D3. Name, layout and versions
 
 - Python package `juizi.dashboard`; Volto add-on `volto-juizi-dashboard` in
@@ -43,13 +52,16 @@ because of the SQL server and an old SQLAlchemy pin.
   eventual add-on.
 - Plone 6.1.5 and Volto 18, as on the test bench.
 
+**Review 2026-10-11: confirmed** (`juizi.dashboard`, not renamed to `juizi.activity`).
+
 ## D4. The record lives in the site root's annotations
 
 The record is one persistent object under the annotation key
 `juizi.dashboard.record`:
 
 - an `LOBTree` of entries, keyed by time;
-- `LLTreeSet` indexes by category, by event type and by who did it;
+- `LLTreeSet` indexes by category, and by person (whoever did it or whom
+  it concerns);
 - a `BTrees.Length` count.
 
 Annotations aren't touched by uninstalling a profile. That's what keeps the
@@ -60,13 +72,29 @@ ZMI's object listings, and they're included in the normal ZODB backup.
 sites. Not needed at client scale, and it can be added later without
 changing the record's code.
 
+**Review 2026-10-11: confirmed.** Raised in the review: show each item's
+content type, so an admin helping an editor can see what kind of item it
+was. Entries already stored the type's id. The dashboard and CSV now show
+its name as editors see it ("Page", not "Document"), looked up when the
+list is read. A type removed since shows its id.
+
 ## D5. Keys are microseconds × 1000 plus a random 0–999
 
 An entry's key is its UTC time in microseconds, times 1000, plus a random
-suffix. This is the PLIP's "timestamp with a random suffix": concurrent
-writes land in different BTree buckets, and a date range is a plain key range.
+suffix. This is the PLIP's "timestamp with a random suffix", and a date
+range is a plain key range.
+
+*Corrected 2026-10-11:* an earlier version of this said the suffix spreads
+concurrent writes across BTree buckets. It doesn't, because keys are
+time-ordered and new entries land in the last bucket. What the suffix does
+is keep two writes in the same microsecond from wanting the same key.
+Concurrent appends to the same bucket are mostly resolved by the BTree's
+own conflict resolution, and Zope retries the rest. That's fine at client
+scale. Load-test it before a very busy site.
 The largest key, around 1.8 × 10¹⁸, fits a signed 64-bit `LOBTree` key until
 the year 2262. If a key is already taken, the next free one is used.
+
+**Review 2026-10-11: confirmed.**
 
 ## D6. One entry per action, not one per child
 
@@ -79,24 +107,55 @@ The same goes for creating an item: Volto's create fires "added" and then
 "modified" in the same request. Only "created" is kept. One request records
 at most one entry per item for each kind of action.
 
-## D7. Sharing changes record the roles as they stand afterwards
+**Review 2026-10-11: confirmed.** Added in the review: deleting, moving,
+copying or renaming a folder notes how many items it took with it, as a
+separate note under the change ("With 4 items inside"). In the CSV the
+note is added to the Details cell. So an admin knows there were items
+inside, even though those items have no entries of their own.
 
-Plone's Sharing event says only that local roles changed, not what changed.
-The entry stores the item's local roles after the change, leaving out Owner,
-for example "Editors: Editor; jane: Reviewer". Admins can compare it with the
-previous Sharing entry for the same item.
+## D7. Sharing changes show what was given and taken away
 
-*Alternative:* snapshot the roles before each change. Rejected because that
-means hooking into the Sharing view and `@sharing` before they save, which is
-a patch.
+Plone's Sharing event says only that local roles changed, not what
+changed. The record therefore remembers each item's local roles at its
+last Sharing change (Owner left out), in a small lookup table by UID
+(`last_sharing`). The next Sharing change on that item is compared with
+them:
 
-## D8. Content actions skip the record's own housekeeping
+> Given: Eddie Editor (Editor); Taken away: Eddie Editor (Reviewer)
+> *Roles now: Eddie Editor (Editor)*
 
-- Only content (`IContentish`) is recorded.
-- Edits made while the add-on itself is being installed or uninstalled are
-  not recorded.
-- Content created by the site's own setup before the record existed was
-  never recorded, so there's nothing to skip there.
+- **Inheritance:** blocking or restoring inherited roles is shown too.
+- **The first change the record sees on an item** can't be compared with
+  anything. It shows "Roles now: …", with a note that the earlier roles
+  weren't recorded.
+- **Deleting** an item drops it from the lookup table.
+- **Erasing a person** replaces them there too (D18).
+- **Records made before this existed** get the table the first time it's
+  used. No upgrade step is needed.
+
+*Alternative 1, the original build:* store only the roles as they stand
+afterwards, and leave admins to compare two entries by eye.
+
+*Alternative 2:* snapshot the roles before each change, by hooking into
+the Sharing view and `@sharing` before they save. That's a patch.
+
+**Review 2026-10-11: changed to this middle way** (the user's choice: "the
+most helpful").
+
+## D8. Only content is recorded, and only where the add-on is installed
+
+- Only content (`IContentish`) is recorded, not tools, registry records or
+  other objects in the ZODB.
+- The add-on's code runs for every site in a Zope instance once it's in
+  the environment. Each handler first checks that the add-on is installed
+  on the current site, and does nothing otherwise, including when no site
+  is set at all, for example while another site is being created. The test
+  bench found this: creating a second site crashed until the check came
+  first.
+
+**Review 2026-10-11: confirmed, content only for now.** Site activity
+(control panel changes, other add-ons installed or uninstalled, types and
+workflows changed) is noted in the README as a possible extension.
 
 ## D9. Settings live in plone.registry; retention lives on the server
 
@@ -113,6 +172,10 @@ a patch.
 Retention isn't on the website for the same reason clearing isn't. The
 dashboard shows both values, read-only.
 
+**Review 2026-10-11: confirmed as is**, including full IP addresses by
+default. Raised and left open: shortened might suit client sites better
+(POPIA/GDPR), since most admins won't change the default.
+
 ## D10. Every settings change and install change is recorded
 
 Switching recording off writes "Recording switched off" before it stops.
@@ -123,15 +186,26 @@ The add-on writes "Add-on installed", "Add-on uninstalled" and "Add-on
 reinstalled" entries. Between an uninstall and a reinstall the record
 shows a visible gap.
 
+**Review 2026-10-11: confirmed.** Known gap, documented: granting the
+dashboard's permission to another role in the ZMI isn't recorded, because
+Plone fires no event for permission changes. It needs Manager access.
+
 ## D11. Times are stored in UTC and shown in the site's time zone
 
 - Entries are stored in UTC.
-- The dashboard shows times in the browser's local time.
+- The dashboard shows times in the site's time zone, not the browser's, so
+  the list, the date filter and the CSV agree. (As first built it used the
+  browser's, which disagreed with the filter whenever the two zones
+  differed.)
 - The CSV has a "When (UTC)" column and a column in the site's time zone
   (`plone.portal_timezone`), so a spreadsheet sorts correctly and still
   reads naturally.
 - The date range filter uses the site's time zone, so "today" means the
   site's today.
+
+**Review 2026-10-11: confirmed, with the list changed to the site's time
+zone.** The README tells installers to set the site's time zone (Plone
+defaults to UTC).
 
 ## D12. CSV cells that look like formulas are made safe
 
@@ -139,6 +213,9 @@ A cell that starts with `=`, `+`, `-`, `@`, a tab or a carriage return gets a
 leading `'`, so a spreadsheet doesn't run it as a formula. Titles and
 profile names are typed by users, and an admin opening the file is exactly
 the person such a formula would target.
+
+**Review 2026-10-11: confirmed.** Accepted cost: harmless titles that start
+with -, + or @ show a leading apostrophe in the CSV (not on screen).
 
 ## D13. A CSV download stops at 100,000 rows
 
@@ -149,13 +226,18 @@ the person such a formula would target.
 
 This keeps one request's memory bounded.
 
+**Review 2026-10-11: confirmed.**
+
 ## D14. Who did it, and their name at the time
 
 - Each entry stores the actor's user id and their full name at the time.
 - The dashboard shows the stored name, so a deleted account's actions still
-  read clearly. If an entry has no stored name, the dashboard shows the
-  current name.
+  read clearly. A person with no full name has their id stored as the name.
+- After a name change, older entries keep the old name. The person filter
+  works by user id, so it shows all of their activity either way.
 - Anonymous actions (self-registration, for example) show as "Anonymous".
+
+**Review 2026-10-11: confirmed.**
 
 ## D15. The dashboard's address
 
@@ -163,8 +245,12 @@ This keeps one request's memory bounded.
 - Its settings are a generic Volto control panel,
   `/controlpanel/juizi-dashboard-settings`, linked from the dashboard.
 - The REST endpoint is `GET @activity`. `?format=csv` gives the download.
-- Both need the permission `juizi.dashboard: View site activity`, which
-  goes to Manager and Site Administrator.
+- The dashboard and `@activity` need `juizi.dashboard: View site activity`.
+  The settings tile needs `juizi.dashboard: Manage activity record
+  settings` (D24). Both go to Manager and Site Administrator.
+- Both tiles are under Add-on Configuration, like membership and donations.
+
+**Review 2026-10-11: confirmed as is** (two tiles, Add-on Configuration).
 
 ## D16. Writes go through even when a request is read-only
 
@@ -184,3 +270,224 @@ would get slower as the record grows. It isn't used.
 *Alternative:* `IDisableCSRFProtection` for the whole request. Rejected,
 because it would also switch the check off for whatever else that request
 writes.
+
+**Review 2026-10-11: confirmed.**
+
+## D17. The record's own entries are never pruned
+
+Entries in the "record" category (add-on installed, uninstalled or
+reinstalled, recording switched on or off, settings changed, entries
+cleared, a person erased) are kept forever, and clearing never removes
+them. There are few of them, and they're the trail that shows whether
+anyone has interfered with the record.
+
+**Review 2026-10-11: confirmed.**
+
+## D18. What erasing a person removes
+
+`erase --user ID`, for a privacy erasure request (POPIA/GDPR):
+
+- **Removes** the person's own account activity: account entries about
+  them that they did themselves, or that happened anonymously. That covers
+  their logins and logouts, their own password and profile changes,
+  self-registration, and passwords set through a reset link.
+- **Keeps, anonymised as "Erased user",** everything else:
+  - what they did to content, to other accounts or to the record;
+  - what *someone else* did to their account, for example an admin creating
+    or deleting it, changing its roles or adding it to a group. Admins'
+    actions keep their trail.
+- **Anonymises** them inside Sharing entries and the record's memory of
+  each item's roles (D7).
+- **Writes** a permanent note with the counts, without the person's id.
+
+**What it can't reach:** their name in site content, such as a page titled
+with it or a comment. That isn't the record, and the site owner deals with
+it separately.
+
+*Alternative 1:* the PLIP's wording ("removes a person's account events").
+Read literally, it would also delete what an administrator did to other
+people's accounts.
+
+*Alternative 2, the first build:* remove every account entry about the
+person, including admins' actions on their account.
+
+**Review 2026-10-11: changed to this refinement** (admins' actions on the
+person's account are kept, anonymised).
+
+## D19. Gaps, stated in the READMEs
+
+Core fires nothing for these, so they aren't recorded:
+- failed logins (a possible extension through LoginLockout: D2);
+- global role changes made in classic Users and Groups or the ZMI (those
+  made in Volto's Users screen are recorded: see D25);
+- password reset requests;
+- permission changes made in the ZMI (D10).
+
+A password set through a reset link *is* recorded, as "Password changed:
+set through a password reset link", because Plone fires its credentials
+event then.
+
+These gaps are listed in the README and `frontend/README.md`, not on the
+dashboard. The note under the list is retention and the settings link only.
+
+**Review 2026-10-11: confirmed.** The user moved the note from the
+dashboard to the READMEs earlier in the review, and decided against a
+"What isn't recorded" link on the dashboard for now, to keep it
+lightweight.
+
+## D20. Presets send a number of days, not dates
+
+The dashboard sends `days=7|28|90`. The server works out the range from
+today in the site's time zone, so a browser in another time zone, or one
+just past midnight, still gets the site's "last 7 days". A custom range
+sends dates.
+
+**Review 2026-10-11: confirmed.**
+
+## D21. Filtering by person: a click on a name, or the Person box
+
+- **Click a name:** clicking a person's name, in "Who" or as the account
+  concerned, narrows the list to entries they did or that concern them. A
+  chip with × clears it.
+- **Type a name:** the **Person** box suggests people as you type (two
+  letters or more), matching name or user id. Choosing one sets the same
+  filter. The suggestions come from `GET @activity-people?q=…`, which
+  lists only people with activity in the record, never the site's whole
+  list of accounts, and needs the same permission as the dashboard.
+- **Names index:** the record keeps a small index of each person's latest
+  name. It's updated as entries are written, a person whose last entry is
+  pruned drops out of it, erasing replaces them, and records made before
+  it existed build it on first use.
+- **Accessibility:** the box is a labelled native input with the browser's
+  own suggestion list (`<datalist>`), so it works with a keyboard and a
+  screen reader without custom ARIA.
+
+*Alternative, the first build:* clicking a name only. On a busy site an
+admin had to page through the list until the person showed up.
+
+**Review 2026-10-11: changed: the Person box was added** (the user's
+example: an admin helping an editor whose page disappeared).
+
+## D22. Test bench: a `dashboard-test` site on payments-testbed
+
+juizi.dashboard isn't part of the payments family. But the bench is where
+Juizi's add-ons are tested on plain Volto, and one more site there costs
+nothing. The bench's changes are on its branch `feat/juizi-dashboard`. The
+site has juizi.dashboard only. Its frontend runs on :3004, one dev server at
+a time, as for the other sites.
+
+**Review 2026-10-11: confirmed, on condition that the add-on stays
+standalone.** Checked: the backend depends only on Plone (Products.CMFPlone,
+plone.api, plone.restapi). The frontend depends only on React, with the
+dashboard style copied in. CI installs nothing else and passes. The bench
+uses the add-on; the add-on knows nothing of the bench. Renaming the bench
+(payments-testbed → juizi-testbed) can wait until a third non-payments
+add-on needs it.
+
+## D23. Uninstalled means unreadable from the website
+
+Once the add-on is uninstalled, `@activity` answers 404 to everyone,
+Manager included. The record is dormant: kept in the ZODB and readable only
+with the server script, or after reinstalling.
+
+The Volto add-on's Site Setup tile stays until the frontend is rebuilt
+without it, which is how Volto add-ons work:
+- a site administrator who opens it sees Volto's Unauthorized page, because
+  uninstalling takes their permission away;
+- Manager sees "The activity record is not installed on this site".
+
+*Alternative:* let Manager keep reading it. Rejected, because "uninstalled"
+should mean the website no longer shows it.
+
+**Review 2026-10-11: confirmed as is.** `@activity-people` (D21) behaves the
+same way. Not done: hiding the Activity tile when the backend isn't
+installed. Uninstalling is rare and is usually followed by removing the
+frontend package.
+
+## D24. Settings have their own permission, so site admins see the tile
+
+The settings configlet first used "Manage portal", which Site
+Administrator doesn't have in Plone 6. Site admins couldn't see the
+settings in Site Setup, even though plone.restapi let them save the form,
+because `@controlpanels` only asks for the Site Setup overview permission.
+The test bench found this.
+
+The configlet now uses its own permission, "juizi.dashboard: Manage
+activity record settings", given to Manager and Site Administrator.
+Uninstalling resets it to Manager only.
+
+collective.membership's settings tile used "Manage portal" too, so site
+admins didn't see it either.
+
+**Review 2026-10-11: confirmed.** For collective.membership the user first
+asked for the same fix. The test bench then showed that Site Administrators
+can't use the Membership dashboard at all, not just its settings tile, and
+the user decided to keep membership Manager-only (membership D25,
+`docs/manager-only`).
+
+## D25. Global role changes from Volto's Users screen are recorded
+
+The test bench showed that plone.restapi's `@users` PATCH passes `roles`
+through `setMemberProperties`, which fires Plone's "properties updated"
+event, before it sets the roles. Without handling, that showed up as
+"Profile changed: Fields: roles".
+
+When that event carries `roles`:
+1. The recorder notes the user's directly given global roles.
+2. It compares them again in a before-commit hook.
+3. Only if they actually changed, it records "Roles changed" with what
+   was given and what was taken away.
+
+A change `@users` refuses (403, for example a site admin trying to give
+Manager) changes nothing, so nothing is recorded. "roles" is never listed
+as a profile field.
+
+Roles that come through groups aren't part of this. Group membership
+changes are recorded on their own.
+
+**Review 2026-10-11: confirmed.**
+
+## D26. Content types hidden from search aren't recorded
+
+Types listed in Site Setup → Search → "types not searched"
+(`plone.types_not_searched`) are left out of content actions: created,
+copied, edited, workflow changes, moved, renamed, deleted. Add-ons list
+their storage types there. On a site with collective.membership, every
+sign-up would otherwise appear as "Created" entries for its Member and
+Membership records, by Anonymous, titled with the person's name.
+
+Sharing changes are still recorded for every type, because they're about
+access.
+
+An admin who wants a type recorded removes it from that list (which also
+makes it searchable). An admin who wants a type left out adds it.
+
+*Alternative:* a setting of our own listing types not to record. That's
+more control, but one more setting to explain. The search list already
+says "this is internal".
+
+**Raised in the security review, 2026-10-11, and built at the user's
+request.**
+
+## D27. A recording problem never blocks the action
+
+Every handler runs inside the user's own save, login or role change, as
+does the commit-time roles check (D25). An error escaping from one would
+make that action fail: an editor's save refused, a login broken.
+
+Every handler is therefore guarded:
+- an error is logged ("juizi.dashboard could not record …; the action
+  went through without an entry"), and the action goes through without
+  its entry;
+- database conflicts still propagate, so Zope retries the request as
+  usual.
+
+Tests force an error in a content save, a workflow change and a role
+change, and check that each goes through.
+
+*Trade-off:* the record can miss an entry when something goes wrong, but
+the miss shows up in the server log. For a client site, the site working
+matters more than a complete trail.
+
+**Raised in the security review, 2026-10-11, and built at the user's
+request.**

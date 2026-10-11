@@ -1,0 +1,94 @@
+<configure
+    xmlns="http://namespaces.zope.org/zope"
+    xmlns:genericsetup="http://namespaces.zope.org/genericsetup"
+    xmlns:plone="http://namespaces.plone.org/plone"
+    i18n_domain="juizi.dashboard">
+
+  <include package="Products.CMFCore" file="permissions.zcml" />
+  <include package="plone.rest" file="meta.zcml" />
+  <include package="plone.restapi" />
+
+  <permission id="juizi.dashboard.ViewSiteActivity" title="juizi.dashboard: View site activity">
+    <role name="Manager" />
+  </permission>
+  <permission id="juizi.dashboard.ManageSettings"
+              title="juizi.dashboard: Manage activity record settings">
+    <role name="Manager" />
+  </permission>
+
+  <genericsetup:registerProfile
+      name="default"
+      title="juizi.dashboard"
+      directory="profiles/default"
+      description="Activity record and dashboard for site administrators: content and account activity by date range, with CSV download."
+      provides="Products.GenericSetup.interfaces.EXTENSION"
+      post_handler=".setuphandlers.post_install"
+      />
+  <genericsetup:registerProfile
+      name="uninstall"
+      title="juizi.dashboard (uninstall)"
+      directory="profiles/uninstall"
+      description="Removes the dashboard, its settings and permission. The record stays, dormant."
+      provides="Products.GenericSetup.interfaces.EXTENSION"
+      post_handler=".setuphandlers.post_uninstall"
+      />
+  <utility factory=".setuphandlers.HiddenProfiles" name="juizi.dashboard-hiddenprofiles" />
+
+  <plone:service method="GET" name="@activity" for="plone.base.interfaces.IPloneSiteRoot"
+      factory=".services.Activity" permission="juizi.dashboard.ViewSiteActivity" />
+  <plone:service method="GET" name="@activity-people" for="plone.base.interfaces.IPloneSiteRoot"
+      factory=".services.People" permission="juizi.dashboard.ViewSiteActivity" />
+
+  <adapter factory=".controlpanel.DashboardSettingsPanel" name="juizi-dashboard-settings"
+           provides="plone.restapi.controlpanels.IControlpanel" />
+
+  <!-- Every subscriber does nothing on a site without the add-on installed
+       (recorder.installed). PAS fires its events with the event alone. -->
+  <subscriber for="Products.PluggableAuthService.interfaces.events.IUserLoggedInEvent"
+              handler=".recorder.logged_in" />
+  <subscriber for="Products.PluggableAuthService.interfaces.events.IUserLoggedOutEvent"
+              handler=".recorder.logged_out" />
+  <subscriber for="Products.PluggableAuthService.interfaces.events.ICredentialsUpdatedEvent"
+              handler=".recorder.credentials_updated" />
+  <subscriber for="Products.PluggableAuthService.interfaces.events.IPrincipalCreatedEvent"
+              handler=".recorder.principal_created" />
+  <subscriber for="Products.PluggableAuthService.interfaces.events.IPrincipalDeletedEvent"
+              handler=".recorder.principal_deleted" />
+  <subscriber for="Products.PluggableAuthService.interfaces.events.IGroupCreatedEvent"
+              handler=".recorder.group_created" />
+  <subscriber for="Products.PluggableAuthService.interfaces.events.IGroupDeletedEvent"
+              handler=".recorder.group_deleted" />
+  <subscriber for="Products.PluggableAuthService.interfaces.events.IPrincipalAddedToGroupEvent"
+              handler=".recorder.added_to_group" />
+  <subscriber for="Products.PluggableAuthService.interfaces.events.IPrincipalRemovedFromGroupEvent"
+              handler=".recorder.removed_from_group" />
+  <subscriber for="Products.PluggableAuthService.interfaces.events.IPropertiesUpdatedEvent"
+              handler=".recorder.properties_updated" />
+
+  <subscriber for="Products.CMFCore.interfaces.IContentish
+                   zope.lifecycleevent.interfaces.IObjectCopiedEvent"
+              handler=".recorder.copied" />
+  <subscriber for="Products.CMFCore.interfaces.IContentish
+                   zope.lifecycleevent.interfaces.IObjectAddedEvent"
+              handler=".recorder.added" />
+  <subscriber for="Products.CMFCore.interfaces.IContentish
+                   zope.lifecycleevent.interfaces.IObjectModifiedEvent"
+              handler=".recorder.modified" />
+  <subscriber for="Products.CMFCore.interfaces.IContentish
+                   Products.DCWorkflow.interfaces.IAfterTransitionEvent"
+              handler=".recorder.transitioned" />
+  <subscriber for="Products.CMFCore.interfaces.IContentish
+                   zope.lifecycleevent.interfaces.IObjectMovedEvent"
+              handler=".recorder.moved" />
+  <subscriber for="Products.CMFCore.interfaces.IContentish
+                   OFS.interfaces.IObjectWillBeRemovedEvent"
+              handler=".recorder.will_be_removed" />
+  <subscriber for="*
+                   plone.app.workflow.interfaces.ILocalrolesModifiedEvent"
+              handler=".recorder.sharing_changed" />
+
+  <subscriber for="juizi.dashboard.interfaces.IDashboardSettings
+                   plone.registry.interfaces.IRecordModifiedEvent"
+              handler=".recorder.settings_changed" />
+
+</configure>
