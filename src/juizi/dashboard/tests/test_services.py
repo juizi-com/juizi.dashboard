@@ -231,6 +231,23 @@ class TestActivityService(unittest.TestCase):
         items = self.events(category='account', person='editor')['items']
         self.assertNotIn('Roles changed', [i['label'] for i in items])
 
+    def test_person_suggestions(self):
+        # An account with no activity in the record: created while recording
+        # was off.
+        api.portal.set_registry_record('juizi.dashboard.recording', False)
+        api.user.create(email='quiet@example.com', username='quiet-editor')
+        api.portal.set_registry_record('juizi.dashboard.recording', True)
+        transaction.commit()
+        self.session('editor')  # a login: Editor is now in the record
+        reader = self.session('siteadmin')
+        found = reader.get('@activity-people', params={'q': 'edi'})
+        self.assertEqual(found.status_code, 200, found.text)
+        self.assertEqual(found.json()['items'], [{'id': 'editor', 'name': 'Editor'}])
+        self.assertEqual(reader.get('@activity-people', params={'q': 'e'}).json()['items'],
+                         [])  # two letters at least
+        self.assertEqual(self.session('editor').get(
+            '@activity-people', params={'q': 'edi'}).status_code, 401)
+
     def test_uninstalled_record_is_not_served_even_to_manager(self):
         self.portal.restrictedTraverse('@@installer').uninstall_product('juizi.dashboard')
         transaction.commit()

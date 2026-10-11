@@ -11,7 +11,8 @@ Administrator. It shows one list of what happened on the site, newest first:
 - **Filters:**
   - the last 7, 28 or 90 days, or chosen dates, in the site's time zone;
   - everything, content, people or the record's own entries;
-  - one person: click their name, and × to clear it.
+  - one person: click their name, or type it in the Person box, which
+    suggests people who have activity in the record. Use × to clear it.
 - **Download CSV:** exactly what the filters select, up to 100,000 rows.
 - **Pagination:**
   - 50 entries a page;

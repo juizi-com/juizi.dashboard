@@ -336,14 +336,29 @@ sends dates.
 
 **Review 2026-10-11: confirmed.**
 
-## D21. A person filter is a click on a name
+## D21. Filtering by person: a click on a name, or the Person box
 
-- Clicking a person's name, in "Who" or as the account concerned, narrows
-  the list to entries they did or that concern them. A chip with × clears
-  it.
-- There's no person search box. Most people a site admin wants to look at
-  are already in the list.
-- This avoids an endpoint that lists every account name.
+- **Click a name:** clicking a person's name, in "Who" or as the account
+  concerned, narrows the list to entries they did or that concern them. A
+  chip with × clears it.
+- **Type a name:** the **Person** box suggests people as you type (two
+  letters or more), matching name or user id. Choosing one sets the same
+  filter. The suggestions come from `GET @activity-people?q=…`, which
+  lists only people with activity in the record, never the site's whole
+  list of accounts, and needs the same permission as the dashboard.
+- **Names index:** the record keeps a small index of each person's latest
+  name. It's updated as entries are written, a person whose last entry is
+  pruned drops out of it, erasing replaces them, and records made before
+  it existed build it on first use.
+- **Accessibility:** the box is a labelled native input with the browser's
+  own suggestion list (`<datalist>`), so it works with a keyboard and a
+  screen reader without custom ARIA.
+
+*Alternative, the first build:* clicking a name only. On a busy site an
+admin had to page through the list until the person showed up.
+
+**Review 2026-10-11: changed: the Person box was added** (the user's
+example: an admin helping an editor whose page disappeared).
 
 ## D22. Test bench: a `dashboard-test` site on payments-testbed
 

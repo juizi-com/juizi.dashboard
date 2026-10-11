@@ -106,3 +106,20 @@ def _started(record):
         return None
     from juizi.dashboard.record import when
     return when(record.entries.minKey()).isoformat().replace('+00:00', 'Z')
+
+
+class People(Activity):
+    """GET @activity-people?q=jan: up to 20 people in the record whose name
+    or id contains the text. Only people with activity in the record, never
+    the site's whole list of accounts (D21)."""
+
+    def handle(self):
+        text = (self.request.form.get('q') or '').strip().lower()
+        record = get_record(self.context)
+        if len(text) < 2 or record is None:
+            return {'items': []}
+        found = [{'id': person, 'name': name}
+                 for person, name in record.person_names().items()
+                 if text in person.lower() or text in (name or '').lower()]
+        found.sort(key=lambda p: (p['name'] or p['id']).lower())
+        return {'items': found[:20]}

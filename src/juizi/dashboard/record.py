@@ -74,6 +74,17 @@ class ActivityRecord(Persistent):
         self.by_person = OOBTree()
         self.count = Length()
         self.last_sharing = OOBTree()
+        self.names = OOBTree()
+
+    def person_names(self):
+        """Each person's latest name in the record, by id: for the Person
+        box (D21). Records made before this existed build it on first use."""
+        names = getattr(self, 'names', None)
+        if names is None:
+            names = self.names = OOBTree()
+            for person, keys in self.by_person.items():
+                names[person] = _name_in(self.entries[keys.maxKey()], person)
+        return names
 
     def sharing_memory(self):
         """Each item's local roles at its last Sharing change (D7), by UID.
@@ -92,6 +103,11 @@ class ActivityRecord(Persistent):
         entry = dict(entry)
         self.entries[key] = entry
         self._index(key, entry)
+        names = self.person_names()
+        for person in {entry.get('actor'), entry.get('subject')} - {None, ''}:
+            name = _name_in(entry, person)
+            if names.get(person) != name:
+                names[person] = name
         self.count.change(1)
         self.prune(key)
         return key
@@ -122,6 +138,10 @@ class ActivityRecord(Persistent):
             return None
         self._unindex(key, entry)
         del self.entries[key]
+        names = self.person_names()
+        for person in {entry.get('actor'), entry.get('subject')} - {None, ''}:
+            if person not in self.by_person and person in names:
+                del names[person]  # no entries left: no longer suggested
         self.count.change(-1)
         return entry
 
@@ -170,6 +190,14 @@ class ActivityRecord(Persistent):
 
     def __len__(self):
         return self.count()
+
+
+def _name_in(entry, person):
+    if entry.get('actor') == person and entry.get('actor_name'):
+        return entry['actor_name']
+    if entry.get('subject') == person and entry.get('subject_name'):
+        return entry['subject_name']
+    return person
 
 
 def get_record(site=None, create=False):

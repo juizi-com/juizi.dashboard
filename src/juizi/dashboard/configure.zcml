@@ -36,6 +36,8 @@
 
   <plone:service method="GET" name="@activity" for="plone.base.interfaces.IPloneSiteRoot"
       factory=".services.Activity" permission="juizi.dashboard.ViewSiteActivity" />
+  <plone:service method="GET" name="@activity-people" for="plone.base.interfaces.IPloneSiteRoot"
+      factory=".services.People" permission="juizi.dashboard.ViewSiteActivity" />
 
   <adapter factory=".controlpanel.DashboardSettingsPanel" name="juizi-dashboard-settings"
            provides="plone.restapi.controlpanels.IControlpanel" />

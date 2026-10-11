@@ -76,3 +76,23 @@ class TestRecord(unittest.TestCase):
                                 key=self.base + d * 1000)  # same day: nothing expires
             self.at(10, category='account', event='login')
         self.assertEqual(len(self.record.by_category['account']), 51 - 20)
+
+
+class TestPersonNames(unittest.TestCase):
+
+    def test_latest_name_kept_and_built_for_old_records(self):
+        record = ActivityRecord()
+        record.add({'category': 'account', 'event': 'login', 'actor': 'jane',
+                    'actor_name': 'Jane Doe', 'subject': 'jane', 'subject_name': 'Jane Doe'})
+        record.add({'category': 'account', 'event': 'login', 'actor': 'jane',
+                    'actor_name': 'Jane Smith', 'subject': 'jane', 'subject_name': 'Jane Smith'})
+        self.assertEqual(dict(record.person_names()), {'jane': 'Jane Smith'})
+        del record.names  # as on a record made before the index existed
+        self.assertEqual(dict(record.person_names()), {'jane': 'Jane Smith'})
+
+    def test_pruned_person_is_no_longer_suggested(self):
+        record = ActivityRecord()
+        key = record.add({'category': 'account', 'event': 'login', 'actor': 'bob',
+                          'actor_name': 'Bob', 'subject': 'bob', 'subject_name': 'Bob'})
+        record.remove(key)
+        self.assertNotIn('bob', record.person_names())

@@ -111,6 +111,10 @@ def erase(record, person, by=None):
             record.replace(key, dict(entry, detail=dict(
                 detail, **{f: scrub(people) for f, people in lists.items()})))
             anonymised += 1
+    record.person_names().pop(person, None)
+    names = record.person_names()
+    if ERASED_ID in record.by_person:
+        names[ERASED_ID] = ERASED_NAME
     memory = record.sharing_memory()
     for uid, last in list(memory.items()):
         if person in last['roles']:

@@ -190,6 +190,8 @@ const ActivityDashboard = () => {
     person: '',
   });
   const [personName, setPersonName] = useState('');
+  const [personQuery, setPersonQuery] = useState('');
+  const [suggestions, setSuggestions] = useState([]);
   const [page, setPage] = useState(1);
   const [data, setData] = useState(null);
   const [error, setError] = useState('');
@@ -224,6 +226,23 @@ const ActivityDashboard = () => {
     if (token) load();
   }, [token, load]);
 
+  // People in the record whose name or id contains what's typed (D21).
+  useEffect(() => {
+    if (!token || personQuery.trim().length < 2) {
+      setSuggestions([]);
+      return undefined;
+    }
+    const timer = setTimeout(() => {
+      getJson(
+        token,
+        `@activity-people?q=${encodeURIComponent(personQuery.trim())}`,
+      )
+        .then((result) => setSuggestions(result.items))
+        .catch(() => setSuggestions([]));
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [token, personQuery]);
+
   useEffect(() => {
     if (pageChanged.current && data && summaryRef.current) {
       pageChanged.current = false;
@@ -245,6 +264,18 @@ const ActivityDashboard = () => {
   const pickPerson = (id, name) => {
     setPersonName(name);
     change({ person: id });
+  };
+  const suggestionLabel = (p) =>
+    p.name && p.name !== p.id ? `${p.name} (${p.id})` : p.id;
+  const typePerson = (value) => {
+    const match = suggestions.find((p) => suggestionLabel(p) === value);
+    if (match) {
+      pickPerson(match.id, match.name || match.id);
+      setPersonQuery('');
+      setSuggestions([]);
+    } else {
+      setPersonQuery(value);
+    }
   };
   const custom = !filters.days;
   const total = data?.total || 0;
@@ -363,6 +394,23 @@ const ActivityDashboard = () => {
                 </option>
               ))}
             </select>
+          </label>
+          <label className="juizi-activity__field">
+            <span>Person</span>
+            <input
+              type="search"
+              className="juizi-dashboard__input"
+              list="juizi-activity-people"
+              placeholder="Type a name"
+              autoComplete="off"
+              value={personQuery}
+              onChange={(e) => typePerson(e.target.value)}
+            />
+            <datalist id="juizi-activity-people">
+              {suggestions.map((p) => (
+                <option key={p.id} value={suggestionLabel(p)} />
+              ))}
+            </datalist>
           </label>
           {filters.person && (
             <span className="juizi-activity__person">
