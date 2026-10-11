@@ -218,6 +218,8 @@ with -, + or @ show a leading apostrophe in the CSV (not on screen).
 
 This keeps one request's memory bounded.
 
+**Review 2026-10-11: confirmed.**
+
 ## D14. Who did it, and their name at the time
 
 - Each entry stores the actor's user id and their full name at the time.
