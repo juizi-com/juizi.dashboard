@@ -51,8 +51,13 @@
     text-align: left;
   }
 
-  &__table td:nth-child(3) {
-    min-width: 200px;
+  &__table td:nth-child(5) {
+    min-width: 240px;
+  }
+
+  // The change itself, under the item or account it was made to.
+  &__detail {
+    margin-top: 4px;
   }
 
   &__badge {

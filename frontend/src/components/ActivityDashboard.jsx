@@ -320,16 +320,23 @@ const ActivityDashboard = () => {
           >
             <thead>
               <tr>
+                <th>Type</th>
                 <th>When</th>
                 <th>Who</th>
                 <th>What</th>
-                <th>Item or account</th>
                 <th>Details</th>
               </tr>
             </thead>
             <tbody>
               {data.items.map((item) => (
                 <tr key={item.id}>
+                  <td className="juizi-dashboard__cell--fit">
+                    <span
+                      className={`juizi-activity__badge juizi-activity__badge--${item.category}`}
+                    >
+                      {CATEGORY_LABELS[item.category]}
+                    </span>
+                  </td>
                   <td className="juizi-dashboard__cell--fit">
                     {dateTime(item.when)}
                   </td>
@@ -339,22 +346,17 @@ const ActivityDashboard = () => {
                       name={item.actor_name}
                       onPick={pickPerson}
                     />
-                  </td>
-                  <td>
-                    <span
-                      className={`juizi-activity__badge juizi-activity__badge--${item.category}`}
-                    >
-                      {CATEGORY_LABELS[item.category]}
-                    </span>{' '}
-                    {item.label}
-                  </td>
-                  <td>
-                    <Concerning item={item} onPick={pickPerson} />
-                  </td>
-                  <td>
-                    {item.detail}
                     {item.ip && (
                       <div className="juizi-dashboard__muted">IP {item.ip}</div>
+                    )}
+                  </td>
+                  <td>{item.label}</td>
+                  <td>
+                    <Concerning item={item} onPick={pickPerson} />
+                    {item.detail && (
+                      <div className="juizi-activity__detail">
+                        {item.detail}
+                      </div>
                     )}
                   </td>
                 </tr>
