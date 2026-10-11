@@ -411,8 +411,11 @@ Uninstalling resets it to Manager only.
 collective.membership's settings tile used "Manage portal" too, so site
 admins didn't see it either.
 
-**Review 2026-10-11: confirmed.** The user asked for the same fix in
-collective.membership (its own branch and PR).
+**Review 2026-10-11: confirmed.** For collective.membership the user first
+asked for the same fix. The test bench then showed that Site Administrators
+can't use the Membership dashboard at all, not just its settings tile, and
+the user decided to keep membership Manager-only (membership D25,
+`docs/manager-only`).
 
 ## D25. Global role changes from Volto's Users screen are recorded
 
