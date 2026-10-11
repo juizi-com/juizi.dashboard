@@ -1,7 +1,35 @@
 // The activity list's own layout, on top of the shared Juizi dashboard style.
 .juizi-activity {
+  // Read by screen readers, not shown.
+  &__sr {
+    position: absolute;
+    overflow: hidden;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+  }
+
   &__filters {
     margin: 16px 0;
+  }
+
+  // The shared style's #007bff is 3.97:1 on white, under WCAG AA's 4.5:1.
+  // Overridden here only; the shared stylesheet is the user's call.
+  .juizi-dashboard__tab:hover,
+  .juizi-dashboard__tab--active {
+    color: #0a5ea8;
+  }
+
+  .juizi-dashboard__tab--active {
+    border-bottom-color: #0a5ea8;
+  }
+
+  &__presets {
+    flex-wrap: wrap;
+    row-gap: 4px;
   }
 
   &__row {
@@ -32,27 +60,58 @@
     background: #e9ecef;
     font-size: 13px;
     gap: 6px;
+
+    .juizi-dashboard__link-button {
+      min-width: 24px;
+      min-height: 24px;
+    }
   }
 
   &__summary {
     margin: 8px 0;
+
+    &:focus {
+      outline: none;
+    }
+
+    &:focus-visible {
+      outline: 2px solid #0a5ea8;
+      outline-offset: 2px;
+    }
   }
 
-  &__scroll {
-    overflow-x: auto;
-  }
+  &__table {
+    td {
+      vertical-align: top;
+    }
 
-  &__table td {
-    vertical-align: top;
-  }
+    td:nth-child(1),
+    td:nth-child(2) {
+      white-space: nowrap;
+    }
 
-  &__table .juizi-dashboard__link-button {
-    padding: 0;
-    text-align: left;
-  }
+    td:nth-child(4) {
+      min-width: 9em;
+    }
 
-  &__table td:nth-child(5) {
-    min-width: 240px;
+    // Long titles and paths break rather than push the table wider.
+    td:nth-child(5) {
+      overflow-wrap: anywhere;
+    }
+
+    // At least 24px to tap (WCAG 2.2 target size): names are buttons that
+    // filter the list, items are links.
+    a {
+      display: inline-block;
+      min-height: 24px;
+      line-height: 24px;
+    }
+
+    .juizi-dashboard__link-button {
+      min-height: 24px;
+      padding: 0;
+      text-align: left;
+    }
   }
 
   // The change itself, under the item or account it was made to.
@@ -60,13 +119,14 @@
     margin-top: 4px;
   }
 
+  // Colours meet WCAG AA contrast for small bold text.
   &__badge {
     display: inline-block;
     padding: 1px 6px;
     border-radius: 3px;
     background: #e9ecef;
     color: #333;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 600;
 
     &--content {
@@ -81,15 +141,137 @@
 
     &--record {
       background: #fff3e0;
-      color: #e65100;
+      color: #8a3200;
     }
   }
 
   &__pager {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
     justify-content: center;
+    margin-top: 16px;
+    gap: 8px;
+  }
+
+  &__pages {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    padding: 0;
+    margin: 0;
+    gap: 4px;
+    list-style: none;
+  }
+
+  &__page {
+    min-width: 36px;
+    min-height: 36px;
+    padding: 0 8px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    background: #fff;
+    color: #333;
+    cursor: pointer;
+
+    &:hover:not(:disabled) {
+      background: #f1f3f5;
+    }
+
+    &--current {
+      border-color: #0a5ea8;
+      background: #0a5ea8;
+      color: #fff;
+      cursor: default;
+
+      &:hover:not(:disabled) {
+        background: #0a5ea8;
+      }
+    }
+  }
+
+  &__range {
+    flex-basis: 100%;
+    color: #6c757d;
+    font-size: 13px;
+    text-align: center;
   }
 
   &__retention {
     margin-top: 24px;
+  }
+
+  // Narrow screens: each entry becomes a card, each field labelled.
+  @media (max-width: 640px) {
+    &__table {
+      display: block;
+      width: 100%;
+      border: 0;
+      background: none;
+
+      thead {
+        position: absolute;
+        overflow: hidden;
+        width: 1px;
+        height: 1px;
+        clip: rect(0, 0, 0, 0);
+      }
+
+      tbody,
+      tr,
+      td {
+        display: block;
+      }
+
+      tr {
+        padding: 8px 12px;
+        border: 1px solid #e0e0e0;
+        border-radius: 4px;
+        margin-bottom: 12px;
+        background: #fff;
+      }
+
+      td,
+      tbody tr:last-child td {
+        display: grid;
+        padding: 4px 0;
+        border-bottom: 0;
+        gap: 8px;
+        grid-template-columns: 5.5em minmax(0, 1fr);
+        overflow-wrap: anywhere;
+        white-space: normal;
+      }
+
+      td:nth-child(1),
+      td:nth-child(2) {
+        white-space: normal;
+      }
+
+      td::before {
+        color: #6c757d;
+        content: attr(data-label);
+        font-size: 13px;
+        font-weight: 600;
+      }
+
+      td > * {
+        justify-self: start;
+        grid-column: 2;
+      }
+
+      // No details: no empty "Details" label.
+      td:empty {
+        display: none;
+      }
+
+      td:nth-child(4) {
+        min-width: 0;
+      }
+    }
+
+    &__row > .juizi-dashboard__btn {
+      width: 100%;
+      justify-content: center;
+    }
   }
 }

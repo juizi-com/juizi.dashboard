@@ -3,9 +3,8 @@
  * first, filtered by date range, with a CSV download of the same filters.
  * Site administrators only (the backend answers 401 to anyone else).
  */
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { Link } from 'react-router-dom';
 import { Unauthorized } from '@plone/volto/components';
 import { download, getJson } from '../api';
 import { BackToSiteSetup, DashboardFooter } from './DashboardChrome';
@@ -60,6 +59,14 @@ const query = (filters, extra = {}) => {
   return params.toString();
 };
 
+// Every link opens in a new tab, so the dashboard stays where it was.
+const NewTab = ({ to, children }) => (
+  <a href={to} target="_blank" rel="noopener noreferrer">
+    {children}
+    <span className="juizi-activity__sr"> (opens in a new tab)</span>
+  </a>
+);
+
 const Person = ({ id, name, onPick }) => {
   if (!id) return <span className="juizi-dashboard__muted">Anonymous</span>;
   return (
@@ -76,11 +83,14 @@ const Person = ({ id, name, onPick }) => {
 
 const Concerning = ({ item, onPick }) => {
   if (item.path) {
-    const gone = item.event === 'content.deleted';
     const label = item.title || item.path;
     return (
       <>
-        {gone ? <span>{label}</span> : <Link to={item.path}>{label}</Link>}
+        {item.event === 'content.deleted' ? (
+          <span>{label}</span>
+        ) : (
+          <NewTab to={item.path}>{label}</NewTab>
+        )}
         <div className="juizi-dashboard__muted">{item.path}</div>
       </>
     );
@@ -91,6 +101,76 @@ const Concerning = ({ item, onPick }) => {
     );
   }
   return null;
+};
+
+// Page numbers: the first, the last, and two either side of the current
+// page, with a gap marker between runs.
+const pageNumbers = (page, pages) => {
+  const wanted = new Set([1, pages]);
+  for (let n = page - 2; n <= page + 2; n += 1) {
+    if (n >= 1 && n <= pages) wanted.add(n);
+  }
+  const sorted = [...wanted].sort((a, b) => a - b);
+  return sorted.flatMap((n, i) =>
+    i > 0 && n - sorted[i - 1] > 1 ? ['gap', n] : [n],
+  );
+};
+
+const Pager = ({ page, size, total, onChange, disabled }) => {
+  const pages = Math.ceil(total / size);
+  if (pages <= 1) return null;
+  const first = (page - 1) * size + 1;
+  const last = Math.min(page * size, total);
+  return (
+    <nav className="juizi-activity__pager" aria-label="Pages">
+      <button
+        type="button"
+        className="juizi-dashboard__btn juizi-dashboard__btn--secondary"
+        disabled={page <= 1 || disabled}
+        onClick={() => onChange(page - 1)}
+      >
+        ← Previous
+      </button>
+      <ul className="juizi-activity__pages">
+        {pageNumbers(page, pages).map((n, i) =>
+          n === 'gap' ? (
+            // eslint-disable-next-line react/no-array-index-key
+            <li key={`gap-${i}`} aria-hidden="true">
+              …
+            </li>
+          ) : (
+            <li key={n}>
+              <button
+                type="button"
+                className={
+                  n === page
+                    ? 'juizi-activity__page juizi-activity__page--current'
+                    : 'juizi-activity__page'
+                }
+                aria-label={`Page ${n}`}
+                aria-current={n === page ? 'page' : undefined}
+                disabled={disabled}
+                onClick={() => n !== page && onChange(n)}
+              >
+                {n}
+              </button>
+            </li>
+          ),
+        )}
+      </ul>
+      <button
+        type="button"
+        className="juizi-dashboard__btn juizi-dashboard__btn--secondary"
+        disabled={page >= pages || disabled}
+        onClick={() => onChange(page + 1)}
+      >
+        Next →
+      </button>
+      <span className="juizi-activity__range">
+        {first}–{last} of {total}
+      </span>
+    </nav>
+  );
 };
 
 const ActivityDashboard = () => {
@@ -109,6 +189,10 @@ const ActivityDashboard = () => {
   const [forbidden, setForbidden] = useState(false);
   const [loading, setLoading] = useState(false);
   const [downloading, setDownloading] = useState(false);
+  // After a page change, focus moves to the summary above the list, so
+  // keyboard and screen reader users start at the top of the new page.
+  const summaryRef = useRef(null);
+  const pageChanged = useRef(false);
 
   const load = useCallback(() => {
     if (!filters.days && (!filters.from || !filters.to)) return;
@@ -133,11 +217,23 @@ const ActivityDashboard = () => {
     if (token) load();
   }, [token, load]);
 
+  useEffect(() => {
+    if (pageChanged.current && data && summaryRef.current) {
+      pageChanged.current = false;
+      summaryRef.current.focus();
+      summaryRef.current.scrollIntoView({ block: 'start' });
+    }
+  }, [data]);
+
   if (!token || forbidden) return <Unauthorized />;
 
   const change = (next) => {
     setPage(1);
     setFilters((current) => ({ ...current, ...next }));
+  };
+  const goTo = (n) => {
+    pageChanged.current = true;
+    setPage(n);
   };
   const pickPerson = (id, name) => {
     setPersonName(name);
@@ -167,10 +263,7 @@ const ActivityDashboard = () => {
   };
 
   return (
-    <div
-      id="page-juizi-activity"
-      className="juizi-dashboard juizi-dashboard--wide juizi-activity"
-    >
+    <div id="page-juizi-activity" className="juizi-dashboard juizi-activity">
       <h1>Activity</h1>
       <p className="juizi-dashboard__description">
         What happened on this site, newest first: content that was created,
@@ -181,16 +274,16 @@ const ActivityDashboard = () => {
       {data && !data.recording && (
         <div className="juizi-dashboard__error" role="status">
           Recording is switched off, so nothing new is being added.{' '}
-          <Link to="/controlpanel/juizi-dashboard-settings">
+          <NewTab to="/controlpanel/juizi-dashboard-settings">
             Switch it on in the settings
-          </Link>
+          </NewTab>
           .
         </div>
       )}
 
       <div className="juizi-activity__filters">
         <div
-          className="juizi-dashboard__tabs"
+          className="juizi-dashboard__tabs juizi-activity__presets"
           role="group"
           aria-label="Date range"
         >
@@ -296,11 +389,17 @@ const ActivityDashboard = () => {
       )}
 
       {data && (
-        <p className="juizi-dashboard__muted juizi-activity__summary">
+        <p
+          ref={summaryRef}
+          tabIndex={-1}
+          className="juizi-dashboard__muted juizi-activity__summary"
+          aria-live="polite"
+        >
           {total === 1 ? '1 entry' : `${total} entries`} from {day(data.from)}{' '}
           to {day(data.to)}
-          {filters.person && ` for ${personName || filters.person}`}. Dates
-          follow the site's time zone ({data.timezone}).
+          {filters.person && ` for ${personName || filters.person}`}
+          {pages > 1 && `, page ${data.page} of ${pages}`}. Dates follow the
+          site's time zone ({data.timezone}).
         </p>
       )}
 
@@ -313,92 +412,77 @@ const ActivityDashboard = () => {
       )}
 
       {data && total > 0 && (
-        <div className="juizi-activity__scroll">
-          <table
-            className="juizi-dashboard__table juizi-activity__table"
-            aria-busy={loading}
-          >
-            <thead>
-              <tr>
-                <th>Type</th>
-                <th>When</th>
-                <th>Who</th>
-                <th>What</th>
-                <th>Details</th>
+        <table
+          className="juizi-dashboard__table juizi-activity__table"
+          aria-busy={loading}
+        >
+          <caption className="juizi-activity__sr">
+            Activity, newest first
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col">Type</th>
+              <th scope="col">When</th>
+              <th scope="col">Who</th>
+              <th scope="col">What</th>
+              <th scope="col">Details</th>
+            </tr>
+          </thead>
+          <tbody>
+            {data.items.map((item) => (
+              // Explicit roles keep the table's meaning for screen readers
+              // when narrow screens show each row as a card.
+              <tr key={item.id} role="row">
+                <td role="cell" data-label="Type">
+                  <span
+                    className={`juizi-activity__badge juizi-activity__badge--${item.category}`}
+                  >
+                    {CATEGORY_LABELS[item.category]}
+                  </span>
+                </td>
+                <td role="cell" data-label="When">
+                  {dateTime(item.when)}
+                </td>
+                <td role="cell" data-label="Who">
+                  <Person
+                    id={item.actor}
+                    name={item.actor_name}
+                    onPick={pickPerson}
+                  />
+                  {item.ip && (
+                    <div className="juizi-dashboard__muted">IP {item.ip}</div>
+                  )}
+                </td>
+                <td role="cell" data-label="What">
+                  {item.label}
+                </td>
+                <td role="cell" data-label="Details">
+                  <Concerning item={item} onPick={pickPerson} />
+                  {item.detail && (
+                    <div className="juizi-activity__detail">{item.detail}</div>
+                  )}
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {data.items.map((item) => (
-                <tr key={item.id}>
-                  <td className="juizi-dashboard__cell--fit">
-                    <span
-                      className={`juizi-activity__badge juizi-activity__badge--${item.category}`}
-                    >
-                      {CATEGORY_LABELS[item.category]}
-                    </span>
-                  </td>
-                  <td className="juizi-dashboard__cell--fit">
-                    {dateTime(item.when)}
-                  </td>
-                  <td>
-                    <Person
-                      id={item.actor}
-                      name={item.actor_name}
-                      onPick={pickPerson}
-                    />
-                    {item.ip && (
-                      <div className="juizi-dashboard__muted">IP {item.ip}</div>
-                    )}
-                  </td>
-                  <td>{item.label}</td>
-                  <td>
-                    <Concerning item={item} onPick={pickPerson} />
-                    {item.detail && (
-                      <div className="juizi-activity__detail">
-                        {item.detail}
-                      </div>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+            ))}
+          </tbody>
+        </table>
       )}
 
-      {data && pages > 1 && (
-        <div className="juizi-dashboard__actions juizi-activity__pager">
-          <button
-            type="button"
-            className="juizi-dashboard__btn juizi-dashboard__btn--secondary"
-            disabled={page <= 1 || loading}
-            onClick={() => setPage(page - 1)}
-          >
-            Newer
-          </button>
-          <span>
-            Page {page} of {pages}
-          </span>
-          <button
-            type="button"
-            className="juizi-dashboard__btn juizi-dashboard__btn--secondary"
-            disabled={page >= pages || loading}
-            onClick={() => setPage(page + 1)}
-          >
-            Older
-          </button>
-        </div>
+      {data && (
+        <Pager
+          page={data.page}
+          size={SIZE}
+          total={total}
+          onChange={goTo}
+          disabled={loading}
+        />
       )}
 
       {data && (
         <p className="juizi-dashboard__hint juizi-activity__retention">
           Account activity is kept {keep(data.retention.account_days)} and
-          content actions {keep(data.retention.content_days)}. That's set on the
-          server, and entries can only be cleared there. Failed logins aren't
-          recorded, because Plone doesn't report them yet. Role changes are
-          recorded when made in Users (Volto), not in the classic Users and
-          Groups screen.{' '}
-          <Link to="/controlpanel/juizi-dashboard-settings">Settings</Link>
+          content actions {keep(data.retention.content_days)}.{' '}
+          <NewTab to="/controlpanel/juizi-dashboard-settings">Settings</NewTab>
         </p>
       )}
 

@@ -44,7 +44,7 @@ Set in the backend's environment, never on the website:
 
 `0` keeps entries forever. Expired entries are removed a few at a time as
 new ones are written. The record's own entries (install, settings, clears)
-are kept forever.
+are kept forever. The dashboard shows both periods but can't change them.
 
 ## The server script
 
