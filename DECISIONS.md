@@ -273,6 +273,8 @@ cleared, a person erased) are kept forever, and clearing never removes
 them. There are few of them, and they're the trail that shows whether
 anyone has interfered with the record.
 
+**Review 2026-10-11: confirmed.**
+
 ## D18. What erasing a person removes
 
 `erase --user ID`:
