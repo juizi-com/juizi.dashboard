@@ -164,6 +164,10 @@ workflows changed) is noted in the README as a possible extension.
 Retention isn't on the website for the same reason clearing isn't. The
 dashboard shows both values, read-only.
 
+**Review 2026-10-11: confirmed as is**, including full IP addresses by
+default. Raised and left open: shortened might suit client sites better
+(POPIA/GDPR), since most admins won't change the default.
+
 ## D10. Every settings change and install change is recorded
 
 Switching recording off writes "Recording switched off" before it stops.
