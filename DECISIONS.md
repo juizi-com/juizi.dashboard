@@ -408,9 +408,11 @@ The configlet now uses its own permission, "juizi.dashboard: Manage
 activity record settings", given to Manager and Site Administrator.
 Uninstalling resets it to Manager only.
 
-collective.membership's settings tile uses "Manage portal" too, so site
-admins don't see it either. That's for the user to decide; it hasn't been
-changed.
+collective.membership's settings tile used "Manage portal" too, so site
+admins didn't see it either.
+
+**Review 2026-10-11: confirmed.** The user asked for the same fix in
+collective.membership (its own branch and PR).
 
 ## D25. Global role changes from Volto's Users screen are recorded
 
