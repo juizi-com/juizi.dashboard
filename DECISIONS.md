@@ -306,18 +306,26 @@ person, including admins' actions on their account.
 **Review 2026-10-11: changed to this refinement** (admins' actions on the
 person's account are kept, anonymised).
 
-## D19. Gaps, stated on the dashboard
+## D19. Gaps, stated in the READMEs
 
 Core fires nothing for these, so they aren't recorded:
-- failed logins;
+- failed logins (a possible extension through LoginLockout: D2);
 - global role changes made in classic Users and Groups or the ZMI (those
   made in Volto's Users screen are recorded: see D25);
 - password reset requests;
-- permission changes made in the ZMI.
+- permission changes made in the ZMI (D10).
 
-The dashboard says so under the list. A password set through a reset link
-*is* recorded, as "Password changed: set through a password reset link",
-because Plone fires its credentials event then.
+A password set through a reset link *is* recorded, as "Password changed:
+set through a password reset link", because Plone fires its credentials
+event then.
+
+These gaps are listed in the README and `frontend/README.md`, not on the
+dashboard. The note under the list is retention and the settings link only.
+
+**Review 2026-10-11: confirmed.** The user moved the note from the
+dashboard to the READMEs earlier in the review, and decided against a
+"What isn't recorded" link on the dashboard for now, to keep it
+lightweight.
 
 ## D20. Presets send a number of days, not dates
 
