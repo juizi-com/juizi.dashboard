@@ -368,6 +368,14 @@ nothing. The bench's changes are on its branch `feat/juizi-dashboard`. The
 site has juizi.dashboard only. Its frontend runs on :3004, one dev server at
 a time, as for the other sites.
 
+**Review 2026-10-11: confirmed, on condition that the add-on stays
+standalone.** Checked: the backend depends only on Plone (Products.CMFPlone,
+plone.api, plone.restapi). The frontend depends only on React, with the
+dashboard style copied in. CI installs nothing else and passes. The bench
+uses the add-on; the add-on knows nothing of the bench. Renaming the bench
+(payments-testbed → juizi-testbed) can wait until a third non-payments
+add-on needs it.
+
 ## D23. Uninstalled means unreadable from the website
 
 Once the add-on is uninstalled, `@activity` answers 404 to everyone,
