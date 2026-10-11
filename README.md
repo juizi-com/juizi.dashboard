@@ -72,6 +72,10 @@ Plone fires no event for these:
 
 Global role changes made in Volto's Users screen *are* recorded.
 
+**Possible later:** failed logins through Products.LoginLockout as an
+optional integration (DECISIONS.md, D2). When LoginLockout is installed, its
+failed login attempts would appear on the dashboard.
+
 ## Development
 
     uv venv --python 3.12 .venv

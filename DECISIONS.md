@@ -34,6 +34,15 @@ this add-on unchanged.
 *Alternative:* auditlog as the store, with our own view on top. Rejected
 because of the SQL server and an old SQLAlchemy pin.
 
+**Review 2026-10-11: confirmed, no dependencies for now.**
+
+**Option for later: failed logins through LoginLockout.** Make LoginLockout
+an optional integration, not a dependency. When it's installed, the
+dashboard would show its failed login attempts, for example as "Login
+failed" entries under People. This reopens D1's "no failed logins", and
+it's the realistic way to get them before the PLIP's core event exists,
+without patching Plone.
+
 ## D3. Name, layout and versions
 
 - Python package `juizi.dashboard`; Volto add-on `volto-juizi-dashboard` in
