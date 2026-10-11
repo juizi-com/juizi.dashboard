@@ -185,12 +185,19 @@ Plone fires no event for permission changes. It needs Manager access.
 ## D11. Times are stored in UTC and shown in the site's time zone
 
 - Entries are stored in UTC.
-- The dashboard shows times in the browser's local time.
+- The dashboard shows times in the site's time zone, not the browser's, so
+  the list, the date filter and the CSV agree. (As first built it used the
+  browser's, which disagreed with the filter whenever the two zones
+  differed.)
 - The CSV has a "When (UTC)" column and a column in the site's time zone
   (`plone.portal_timezone`), so a spreadsheet sorts correctly and still
   reads naturally.
 - The date range filter uses the site's time zone, so "today" means the
   site's today.
+
+**Review 2026-10-11: confirmed, with the list changed to the site's time
+zone.** The README tells installers to set the site's time zone (Plone
+defaults to UTC).
 
 ## D12. CSV cells that look like formulas are made safe
 

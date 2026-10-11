@@ -35,11 +35,15 @@ const SIZE = 50;
 
 const keep = (days) => (days ? `for ${days} days` : 'forever');
 
-const dateTime = (iso) =>
-  new Date(iso).toLocaleString(undefined, {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-  });
+// Times show in the site's time zone, as the date filter and CSV do (D11).
+const dateTime = (iso, timeZone) => {
+  const options = { dateStyle: 'medium', timeStyle: 'short' };
+  try {
+    return new Date(iso).toLocaleString(undefined, { ...options, timeZone });
+  } catch (e) {
+    return new Date(iso).toLocaleString(undefined, options);
+  }
+};
 
 const day = (isoDate) =>
   new Date(`${isoDate}T12:00:00`).toLocaleDateString(undefined, {
@@ -401,8 +405,8 @@ const ActivityDashboard = () => {
           {total === 1 ? '1 entry' : `${total} entries`} from {day(data.from)}{' '}
           to {day(data.to)}
           {filters.person && ` for ${personName || filters.person}`}
-          {pages > 1 && `, page ${data.page} of ${pages}`}. Dates follow the
-          site's time zone ({data.timezone}).
+          {pages > 1 && `, page ${data.page} of ${pages}`}. Dates and times
+          follow the site's time zone ({data.timezone}).
         </p>
       )}
 
@@ -410,7 +414,7 @@ const ActivityDashboard = () => {
         <div className="juizi-dashboard__section">
           Nothing was recorded in this range.
           {data.started &&
-            ` The record started on ${dateTime(data.started)}; nothing before that was recorded.`}
+            ` The record started on ${dateTime(data.started, data.timezone)}; nothing before that was recorded.`}
         </div>
       )}
 
@@ -444,7 +448,7 @@ const ActivityDashboard = () => {
                   </span>
                 </td>
                 <td role="cell" data-label="When">
-                  {dateTime(item.when)}
+                  {dateTime(item.when, data.timezone)}
                 </td>
                 <td role="cell" data-label="Who">
                   <Person

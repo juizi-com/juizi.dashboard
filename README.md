@@ -16,7 +16,10 @@ Alpha. Not released.
    install it on the site in Site Setup → Add-ons.
 2. **Frontend:** add `volto-juizi-dashboard` (this repo's `frontend/`) to
    the Volto project's add-ons.
-3. Open Site Setup → **Activity**. Its settings (recording on or off, IP
+3. Set the site's time zone in Site Setup → Date and Time, if it hasn't
+   been set. Plone defaults to UTC. The dashboard's dates, times and date
+   ranges all follow it.
+4. Open Site Setup → **Activity**. Its settings (recording on or off, IP
    addresses, comment text) are under Site Setup → Activity record settings.
 
 Who can see it: Manager and Site Administrator, through the permissions
