@@ -277,19 +277,34 @@ anyone has interfered with the record.
 
 ## D18. What erasing a person removes
 
-`erase --user ID`:
-- **Removes** account entries about the person: their logins and logouts,
-  their password and profile changes, their account's creation, and their
-  group memberships.
-- **Keeps, anonymised as "Erased user",** anything they did to other
-  accounts, to content or to the record, for example sharing changes they
-  made or another account they deleted.
-- **Anonymises** sharing entries that name them in their roles.
+`erase --user ID`, for a privacy erasure request (POPIA/GDPR):
+
+- **Removes** the person's own account activity: account entries about
+  them that they did themselves, or that happened anonymously. That covers
+  their logins and logouts, their own password and profile changes,
+  self-registration, and passwords set through a reset link.
+- **Keeps, anonymised as "Erased user",** everything else:
+  - what they did to content, to other accounts or to the record;
+  - what *someone else* did to their account, for example an admin creating
+    or deleting it, changing its roles or adding it to a group. Admins'
+    actions keep their trail.
+- **Anonymises** them inside Sharing entries and the record's memory of
+  each item's roles (D7).
 - **Writes** a permanent note with the counts, without the person's id.
 
-*Alternative:* the PLIP's wording ("removes a person's account events").
-Read literally, that would also delete what an administrator did to other
-people's accounts, which is exactly the trail an audit needs to keep.
+**What it can't reach:** their name in site content, such as a page titled
+with it or a comment. That isn't the record, and the site owner deals with
+it separately.
+
+*Alternative 1:* the PLIP's wording ("removes a person's account events").
+Read literally, it would also delete what an administrator did to other
+people's accounts.
+
+*Alternative 2, the first build:* remove every account entry about the
+person, including admins' actions on their account.
+
+**Review 2026-10-11: changed to this refinement** (admins' actions on the
+person's account are kept, anonymised).
 
 ## D19. Gaps, stated on the dashboard
 

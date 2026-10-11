@@ -89,21 +89,36 @@ class TestServerScript(unittest.TestCase):
         self.assertEqual(note['detail']['operator'], 'ops@host')
 
     def test_erase(self):
+        from plone.app.workflow.events import LocalrolesModifiedEvent
+        from Products.PlonePAS.events import UserLoggedInEvent
+        from zope.event import notify
+        from zope.annotation.interfaces import IAnnotations
+        from juizi.dashboard.recorder import REQUEST_KEY
         api.user.create(email='jane@example.com', username='jane',
-                        properties={'fullname': 'Jane Doe'})
+                        properties={'fullname': 'Jane Doe'})  # by the admin
+        jane = self.portal.acl_users.getUserById('jane')
+        notify(UserLoggedInEvent(jane))  # her own activity
+        IAnnotations(self.layer['request']).pop(REQUEST_KEY, None)
+        api.group.add_user(groupname='Reviewers', username='jane')  # by the admin
         page = api.content.create(container=self.portal, type='Document', id='p', title='P')
         page.manage_setLocalRoles('jane', ['Editor'])
-        from plone.app.workflow.events import LocalrolesModifiedEvent
-        from zope.event import notify
         notify(LocalrolesModifiedEvent(page, self.layer['request']))
         removed, anonymised = scripts.erase(self.record, 'jane', by='ops@host')
-        self.assertEqual(removed, 1)  # account created
-        self.assertEqual(anonymised, 1)  # the sharing entry names her
+        self.assertEqual(removed, 1)  # her login
+        # account created and group added (by the admin), and the sharing entry
+        self.assertEqual(anonymised, 3)
         dump = repr(list(self.record.entries.values()))
         dump += repr(dict(self.record.sharing_memory()))
         self.assertNotIn('jane', dump)
         self.assertNotIn('Jane Doe', dump)
-        self.assertEqual(list(self.record.entries.values())[-1]['event'], 'record.erased')
+        events = [e['event'] for e in self.record.entries.values()]
+        self.assertIn('account.created', events)  # the admin's action is kept
+        self.assertIn('group.member_added', events)
+        self.assertNotIn('login', events)
+        created = next(e for e in self.record.entries.values()
+                       if e['event'] == 'account.created')
+        self.assertEqual(created['subject_name'], 'Erased user')
+        self.assertEqual(events[-1], 'record.erased')
 
     def test_export_json_lines(self):
         api.content.create(container=self.portal, type='Document', id='p', title='P')

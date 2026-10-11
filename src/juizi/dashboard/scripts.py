@@ -76,13 +76,18 @@ def clear(record, lo, hi, first, last, by=None):
 
 
 def erase(record, person, by=None):
-    """A person's erasure request. Account entries about them go; anything
-    they did to other accounts, to content or to the record stays, with
-    their name replaced (D18). Returns (removed, anonymised)."""
+    """A person's erasure request (D18). Their own account activity goes:
+    logins, logouts, their own password and profile changes, anonymous steps
+    such as a reset link. Everything else stays with their name replaced:
+    what they did, and what others did to their account. Returns
+    (removed, anonymised)."""
     removed = anonymised = 0
     for key in record.select(person=person):
         entry = record.entries[key]
-        if entry['category'] == ACCOUNT and entry.get('subject') == person:
+        # Their own account activity goes; what someone else did to their
+        # account stays, anonymised, so admins' actions keep their trail.
+        if (entry['category'] == ACCOUNT and entry.get('subject') == person
+                and entry.get('actor') in (person, None)):
             record.remove(key)
             removed += 1
             continue

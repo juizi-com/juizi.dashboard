@@ -63,8 +63,14 @@ a ZEO client.
     juizi-dashboard-record etc/zope.conf SITE erase --user USERID --yes
     juizi-dashboard-record etc/zope.conf SITE purge --yes     # only once uninstalled
 
-`erase` handles a person's erasure request. It removes the account entries
-about them and replaces their name with "Erased user" in everything else.
+`erase` handles a person's erasure request:
+- it removes their own account activity (logins, their own password and
+  profile changes);
+- it replaces their name with "Erased user" everywhere else, including what
+  admins did to their account, which stays in the trail.
+
+It can't reach their name in site content (page titles, comments), which the
+site owner handles separately.
 
 ## What isn't recorded
 
