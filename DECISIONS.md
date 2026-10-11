@@ -237,8 +237,12 @@ This keeps one request's memory bounded.
 - Its settings are a generic Volto control panel,
   `/controlpanel/juizi-dashboard-settings`, linked from the dashboard.
 - The REST endpoint is `GET @activity`. `?format=csv` gives the download.
-- Both need the permission `juizi.dashboard: View site activity`, which
-  goes to Manager and Site Administrator.
+- The dashboard and `@activity` need `juizi.dashboard: View site activity`.
+  The settings tile needs `juizi.dashboard: Manage activity record
+  settings` (D24). Both go to Manager and Site Administrator.
+- Both tiles are under Add-on Configuration, like membership and donations.
+
+**Review 2026-10-11: confirmed as is** (two tiles, Add-on Configuration).
 
 ## D16. Writes go through even when a request is read-only
 
