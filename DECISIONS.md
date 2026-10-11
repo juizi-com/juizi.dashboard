@@ -224,9 +224,12 @@ This keeps one request's memory bounded.
 
 - Each entry stores the actor's user id and their full name at the time.
 - The dashboard shows the stored name, so a deleted account's actions still
-  read clearly. If an entry has no stored name, the dashboard shows the
-  current name.
+  read clearly. A person with no full name has their id stored as the name.
+- After a name change, older entries keep the old name. The person filter
+  works by user id, so it shows all of their activity either way.
 - Anonymous actions (self-registration, for example) show as "Anonymous".
+
+**Review 2026-10-11: confirmed.**
 
 ## D15. The dashboard's address
 
