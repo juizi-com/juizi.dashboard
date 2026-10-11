@@ -52,6 +52,8 @@ without patching Plone.
   eventual add-on.
 - Plone 6.1.5 and Volto 18, as on the test bench.
 
+**Review 2026-10-11: confirmed** (`juizi.dashboard`, not renamed to `juizi.activity`).
+
 ## D4. The record lives in the site root's annotations
 
 The record is one persistent object under the annotation key
