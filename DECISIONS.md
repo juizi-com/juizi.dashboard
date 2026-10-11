@@ -391,6 +391,11 @@ without it, which is how Volto add-ons work:
 *Alternative:* let Manager keep reading it. Rejected, because "uninstalled"
 should mean the website no longer shows it.
 
+**Review 2026-10-11: confirmed as is.** `@activity-people` (D21) behaves the
+same way. Not done: hiding the Activity tile when the backend isn't
+installed. Uninstalling is rare and is usually followed by removing the
+frontend package.
+
 ## D24. Settings have their own permission, so site admins see the tile
 
 The settings configlet first used "Manage portal", which Site
