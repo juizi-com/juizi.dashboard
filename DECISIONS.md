@@ -86,6 +86,8 @@ writes land in different BTree buckets, and a date range is a plain key range.
 The largest key, around 1.8 × 10¹⁸, fits a signed 64-bit `LOBTree` key until
 the year 2262. If a key is already taken, the next free one is used.
 
+**Review 2026-10-11: confirmed.**
+
 ## D6. One entry per action, not one per child
 
 Deleting or moving a folder fires Plone's event once for every item inside
