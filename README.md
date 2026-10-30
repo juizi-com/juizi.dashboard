@@ -12,10 +12,16 @@ Alpha. Not released.
 
 ## Installing
 
-1. **Backend:** add `juizi.dashboard` to the backend's requirements, then
-   install it on the site in Site Setup → Add-ons.
+1. **Backend:** add `juizi.dashboard` to the backend's requirements.
 2. **Frontend:** add `volto-juizi-dashboard` (this repo's `frontend/`) to
    the Volto project's add-ons.
+   Then install **Juizi Dashboard** on the site in Site Setup → Add-ons.
+   It's only listed on a frontend that includes `volto-juizi-dashboard`:
+   the backend leaves it out of its add-ons list until it's installed on
+   the site (`setuphandlers.HiddenProfiles`), because one backend can serve
+   several sites and only those with the frontend part can use it, so that
+   frontend adds it to the list itself (`frontend/src/offerAddon.js`). Once
+   installed it's listed as usual, for upgrades and uninstalling.
 3. Set the site's time zone in Site Setup → Date and Time, if it hasn't
    been set. Plone defaults to UTC. The dashboard's dates, times and date
    ranges all follow it.

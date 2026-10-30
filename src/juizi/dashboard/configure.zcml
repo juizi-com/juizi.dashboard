@@ -18,15 +18,15 @@
 
   <genericsetup:registerProfile
       name="default"
-      title="juizi.dashboard"
+      title="Juizi Dashboard"
       directory="profiles/default"
-      description="Activity record and dashboard for site administrators: content and account activity by date range, with CSV download."
+      description="Activity record and dashboard for site administrators: content and account activity by date range, with CSV download. Needs the volto-juizi-dashboard frontend add-on."
       provides="Products.GenericSetup.interfaces.EXTENSION"
       post_handler=".setuphandlers.post_install"
       />
   <genericsetup:registerProfile
       name="uninstall"
-      title="juizi.dashboard (uninstall)"
+      title="Juizi Dashboard (uninstall)"
       directory="profiles/uninstall"
       description="Removes the dashboard, its settings and permission. The record stays, dormant."
       provides="Products.GenericSetup.interfaces.EXTENSION"

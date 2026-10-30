@@ -128,3 +128,47 @@ class TestServerScript(unittest.TestCase):
         self.assertEqual([e['event'] for e in lines], ['addon.installed', 'content.created'])
         self.assertTrue(lines[0]['when'].endswith('Z'))
 
+
+
+class TestAddonsListing(unittest.TestCase):
+    """Listed in Site Setup → Add-ons only once installed; before that, a
+    frontend with volto-juizi-dashboard offers the install."""
+
+    layer = DASHBOARD_INTEGRATION_TESTING
+
+    def setUp(self):
+        self.portal = self.layer['portal']
+        setRoles(self.portal, TEST_USER_ID, ['Manager'])
+        self.installer = self.portal.restrictedTraverse('@@installer')
+
+    def listed(self):
+        from plone.restapi.services.addons.addons import Addons
+        return list(Addons(self.portal, self.portal.REQUEST).get_addons())
+
+    def forget_install(self):
+        from Products.GenericSetup.tool import UNKNOWN
+        self.portal.portal_setup.setLastVersionForProfile(
+            'juizi.dashboard:default', UNKNOWN)
+
+    def test_listed_once_installed(self):
+        self.assertTrue(self.installer.is_product_installable('juizi.dashboard'))
+        self.assertIn('juizi.dashboard', self.listed())
+
+    def test_hidden_until_installed(self):
+        self.forget_install()
+        self.assertFalse(self.installer.is_product_installed('juizi.dashboard'))
+        self.assertFalse(self.installer.is_product_installable('juizi.dashboard'))
+        self.assertNotIn('juizi.dashboard', self.listed())
+        # Still installable when asked for explicitly.
+        self.assertTrue(self.installer.is_product_installable(
+            'juizi.dashboard', allow_hidden=True))
+
+    def test_installs_while_hidden(self):
+        """Volto's Install button (POST @addons/juizi.dashboard/install)
+        still works while it's left out of the list."""
+        from plone.restapi.services.addons.addons import Addons
+        self.forget_install()
+        self.assertTrue(
+            Addons(self.portal, self.portal.REQUEST).install_product('juizi.dashboard'))
+        self.assertTrue(self.installer.is_product_installed('juizi.dashboard'))
+        self.assertIn('juizi.dashboard', self.listed())
