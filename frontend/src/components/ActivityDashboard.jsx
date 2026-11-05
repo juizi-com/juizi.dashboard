@@ -484,9 +484,12 @@ const ActivityDashboard = () => {
             </tr>
           </thead>
           <tbody>
+            {/* Explicit roles keep the table's meaning for screen readers
+                when narrow screens show each row as a card (display: block
+                drops it in some browsers). The rule takes <td> for an
+                interactive element; it isn't one. */}
+            {/* eslint-disable jsx-a11y/no-interactive-element-to-noninteractive-role */}
             {data.items.map((item) => (
-              // Explicit roles keep the table's meaning for screen readers
-              // when narrow screens show each row as a card.
               <tr key={item.id} role="row">
                 <td role="cell" data-label="Type">
                   <span
@@ -522,6 +525,7 @@ const ActivityDashboard = () => {
                 </td>
               </tr>
             ))}
+            {/* eslint-enable jsx-a11y/no-interactive-element-to-noninteractive-role */}
           </tbody>
         </table>
       )}
