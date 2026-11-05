@@ -50,7 +50,8 @@ without patching Plone.
 - `juizi`, not `collective`, for the same reason as juizi.aichatbot: it's
   Juizi's short-term tool, and `collective` is left free for the PLIP's
   eventual add-on.
-- Plone 6.1.5 and Volto 18, as on the test bench.
+- Plone 6.1.5 and Volto 18, as on the test bench. Since 2026-11-05 also
+  Plone 6.0 on Python 3.10 (D28).
 
 **Review 2026-10-11: confirmed** (`juizi.dashboard`, not renamed to `juizi.activity`).
 
@@ -491,3 +492,24 @@ matters more than a complete trail.
 
 **Raised in the security review, 2026-10-11, and built at the user's
 request.**
+
+## D28. Plone 6.0 and Python 3.10 too, tested in CI
+
+Juizi's sites run on two shared backends: p24 (Plone 6.1, Python 3.12) and
+p22 (Plone 6.0.15, Python 3.10). `requires-python = ">=3.12"` was the
+template's default, not a need. The code uses nothing newer than Python
+3.10, and every Plone import (`plone.base`, `plone.restapi`, PAS events)
+is in Plone 6.0. But pip refused to install the package on p22, and
+p22's `make build-dev` failed.
+
+- `requires-python = ">=3.10"`, with Plone 6.0 and Python 3.10–3.12 in
+  the classifiers.
+- CI tests both setups (Plone 6.0.15 on Python 3.10, Plone 6.1.5 on
+  Python 3.12), so code that needs 3.11 or 6.1 fails the PR instead of
+  a site's install.
+- Checked on p22 with the JET site (2026-11-05): all 54 tests pass on
+  Python 3.10 and Plone 6.0.15. Installing from Site Setup → Add-ons,
+  recording (logins, edits, accounts, recording on/off), the Activity
+  screen, the CSV download and the permissions all work as on 6.1.
+
+**Asked for by the user, 2026-11-05.**
