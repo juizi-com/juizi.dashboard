@@ -4,13 +4,16 @@ dynamic = ["version"]
 description = "An activity record and dashboard for Plone site administrators: content and account activity in one list, by date range, with CSV download"
 readme = "README.md"
 license = "GPL-2.0-only"
-requires-python = ">=3.12"
+requires-python = ">=3.10"
 authors = [{ name = "Juizi", email = "karel@juizi.com" }]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Framework :: Plone",
+    "Framework :: Plone :: 6.0",
     "Framework :: Plone :: 6.1",
     "Framework :: Plone :: Addon",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
 ]
 dependencies = [

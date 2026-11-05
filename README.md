@@ -10,11 +10,33 @@ Plain Volto: no Volto Light Theme or kitconcept dependency. See
 
 Alpha. Not released.
 
+Works on Plone 6.0 with Python 3.10 or newer, and on Plone 6.1, with
+Volto 18. CI tests both Plone 6.0.15 on Python 3.10 and Plone 6.1.5 on
+Python 3.12, the two setups Juizi runs (p22 and p24).
+
 ## Installing
 
-1. **Backend:** add `juizi.dashboard` to the backend's requirements.
+1. **Backend:** add `juizi.dashboard` to the backend's requirements. With
+   mxdev, as in p22 and p24:
+
+       [juizi.dashboard]
+       url = git@github.com:juizi-com/juizi.dashboard.git
+       branch = main
+
+   It's picked up through `z3c.autoinclude`, so the instance's
+   `zcml_package_includes` needn't list it.
 2. **Frontend:** add `volto-juizi-dashboard` (this repo's `frontend/`) to
-   the Volto project's add-ons.
+   the Volto project's add-ons. In a pnpm project, with mrs-developer:
+   - in `mrs.developer.json`, check the repository out into `packages/`
+     with `"path": "frontend"`;
+   - in `pnpm-workspace.yaml`, list `'packages/*/frontend'`;
+   - add `volto-juizi-dashboard` to the site add-on's `addons`, and
+     `"volto-juizi-dashboard": "workspace:*"` to its `dependencies`;
+   - also add `"volto-juizi-dashboard": "workspace:*"` to the frontend's
+     root `package.json` `dependencies`, next to the site add-on. Volto
+     looks add-ons up from `core/packages/volto`. Some pnpm versions
+     (9.15) don't hoist workspace packages where it can find them, and
+     Volto then stops with "Cannot find module 'volto-juizi-dashboard'".
    Then install **Juizi Dashboard** on the site in Site Setup → Add-ons.
    It's only listed on a frontend that includes `volto-juizi-dashboard`:
    the backend leaves it out of its add-ons list until it's installed on
@@ -118,6 +140,10 @@ Global role changes made in Volto's Users screen *are* recorded.
       Products.CMFPlone plone.restapi plone.app.contenttypes zope.testrunner \
       horse-with-no-namespace -e ".[test]"
     .venv/bin/zope-testrunner --test-path src
+
+For Plone 6.0, use `--python 3.10` and the 6.0.15 constraints. CI runs
+both. Keep the code to Python 3.10 syntax: no `type` aliases, PEP 695
+generics, `except*`, or f-strings that reuse their own quotes inside.
 
 Browser scenarios run on the payments test bench: `make -C e2e dashboard`,
 on the `dashboard-test` site with the frontend on :3004.
