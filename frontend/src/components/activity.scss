@@ -263,8 +263,8 @@
       }
 
       td > * {
-        justify-self: start;
         grid-column: 2;
+        justify-self: start;
       }
 
       // No details: no empty "Details" label.
