@@ -7,7 +7,7 @@ license = "GPL-2.0-only"
 requires-python = ">=3.12"
 authors = [{ name = "Juizi", email = "karel@juizi.com" }]
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 4 - Beta",
     "Framework :: Plone",
     "Framework :: Plone :: 6.1",
     "Framework :: Plone :: Addon",

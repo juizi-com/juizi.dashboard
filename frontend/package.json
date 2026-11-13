@@ -1,6 +1,6 @@
 {
   "name": "volto-juizi-dashboard",
-  "version": "1.0.0-alpha.0",
+  "version": "1.0.0-beta.0",
   "description": "Volto screen for juizi.dashboard: Site Setup → Activity, content and account activity by date range, with CSV download",
   "main": "src/index.js",
   "license": "GPL-2.0-only",
