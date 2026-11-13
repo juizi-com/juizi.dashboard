@@ -11,6 +11,8 @@ Plain Volto: no Volto Light Theme or kitconcept dependency. See
 Beta: being readied for live sites. Install it from this repository's
 `main` branch.
 
+![The Activity dashboard in Site Setup: filtering by date range, content or people](https://github.com/user-attachments/assets/f745ddf4-d7b5-44bf-9df6-f747f09c2375)
+
 ## Installing
 
 1. **Backend:** add `juizi.dashboard` to the backend's requirements.
