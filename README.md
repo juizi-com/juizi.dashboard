@@ -8,7 +8,8 @@ Plain Volto: no Volto Light Theme or kitconcept dependency. See
 [scope.md](scope.md) for what it records and how it's stored, and
 [DECISIONS.md](DECISIONS.md) for the choices made while building it.
 
-Alpha. Not released.
+Beta: being readied for live sites. Install it from this repository's
+`main` branch.
 
 ## Installing
 
