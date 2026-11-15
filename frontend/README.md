@@ -2,7 +2,7 @@
 
 The Volto screen for juizi.dashboard, on plain Volto (no theme add-on).
 
-It also offers juizi.dashboard in Site Setup → Add-ons (`src/offerAddon.js`): the backend leaves it out of the list until it is installed on the site, because one backend can serve several sites and only those with this frontend add-on can use it. It wraps any add-ons reducer configured before it, so other add-ons that offer themselves the same way stay in the list.
+It also offers juizi.dashboard in Site Setup → Add-ons (`src/offerAddon.js`): the backend leaves it out of the list until it is installed on the site, because one backend can serve several sites and only those with this frontend add-on can use it. It wraps any add-ons reducer configured before it, so other add-ons that offer themselves the same way stay in the list. The offered entry names the add-on's uninstall profile (`juizi.dashboard:uninstall`, set in `src/index.js`), so Volto doesn't say before installing that it can't be uninstalled.
 
 **Site Setup → Activity** (`/controlpanel/activity`) is for Manager and Site
 Administrator. It shows one list of what happened on the site, newest first:
