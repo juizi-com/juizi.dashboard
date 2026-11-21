@@ -1,5 +1,8 @@
 # juizi.dashboard
 
+[![PyPI](https://img.shields.io/pypi/v/juizi.dashboard?label=PyPI)](https://pypi.org/project/juizi.dashboard/)
+[![npm (beta)](https://img.shields.io/npm/v/volto-juizi-dashboard/beta?label=npm%20beta)](https://www.npmjs.com/package/volto-juizi-dashboard)
+
 An activity record for Plone 6 sites, and a dashboard in Volto's Site Setup
 that shows site administrators what happened: content actions and people's
 account activity in one list, filtered by date range, with a CSV download.
@@ -8,16 +11,18 @@ Plain Volto: no Volto Light Theme or kitconcept dependency. See
 [scope.md](scope.md) for what it records and how it's stored, and
 [DECISIONS.md](DECISIONS.md) for the choices made while building it.
 
-Beta: being readied for live sites. Install it from this repository's
-`main` branch.
+Beta: being readied for live sites. Releases are on
+[PyPI](https://pypi.org/project/juizi.dashboard/) and
+[npm](https://www.npmjs.com/package/volto-juizi-dashboard) (npm tag `beta`).
 
 ![The Activity dashboard in Site Setup: filtering by date range, content or people](https://github.com/user-attachments/assets/f745ddf4-d7b5-44bf-9df6-f747f09c2375)
 
 ## Installing
 
-1. **Backend:** add `juizi.dashboard` to the backend's requirements.
+1. **Backend:** add `juizi.dashboard` to the backend's requirements
+   (`pip install --pre juizi.dashboard` while it's in beta).
 2. **Frontend:** add `volto-juizi-dashboard` (this repo's `frontend/`) to
-   the Volto project's add-ons.
+   the Volto project's add-ons (`pnpm add volto-juizi-dashboard@beta`).
    Then install **Juizi Dashboard** on the site in Site Setup → Add-ons.
    It's only listed on a frontend that includes `volto-juizi-dashboard`:
    the backend leaves it out of its add-ons list until it's installed on

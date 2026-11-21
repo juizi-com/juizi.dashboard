@@ -4,6 +4,26 @@ The Volto screen for juizi.dashboard, on plain Volto (no theme add-on).
 
 It also offers juizi.dashboard in Site Setup → Add-ons (`src/offerAddon.js`): the backend leaves it out of the list until it is installed on the site, because one backend can serve several sites and only those with this frontend add-on can use it. It wraps any add-ons reducer configured before it, so other add-ons that offer themselves the same way stay in the list.
 
+## Installing
+
+It needs the backend package too: this screen only shows what
+[juizi.dashboard](https://pypi.org/project/juizi.dashboard/) records.
+
+1. **Backend:** add `juizi.dashboard` to the backend's requirements
+   (`pip install --pre juizi.dashboard` while it's in beta).
+2. **Frontend:** add this package to the Volto project, under the `beta`
+   tag while it's in beta:
+
+       pnpm add volto-juizi-dashboard@beta
+
+   and list `volto-juizi-dashboard` in the project's add-ons (`addons` in
+   `package.json` or `volto.config.js`), then rebuild Volto.
+3. Install **Juizi Dashboard** on the site in Site Setup → Add-ons, and set
+   the site's time zone in Site Setup → Date and Time if it hasn't been set.
+
+The [main README](https://github.com/juizi-com/juizi.dashboard#readme) has
+the details, including uninstalling and the server script.
+
 **Site Setup → Activity** (`/controlpanel/activity`) is for Manager and Site
 Administrator. It shows one list of what happened on the site, newest first:
 
@@ -35,7 +55,7 @@ the settings (Site Setup → Activity record settings).
   `JUIZI_DASHBOARD_ACCOUNT_RETENTION_DAYS` and
   `JUIZI_DASHBOARD_CONTENT_RETENTION_DAYS`, never on the website. Entries
   can only be cleared there too, with the `juizi-dashboard-record` script.
-  See the main README.
+  See the [main README](https://github.com/juizi-com/juizi.dashboard#readme).
 - **What Plone doesn't report, so isn't recorded:**
   - failed logins;
   - role changes made in classic Users and Groups or the ZMI (changes made
