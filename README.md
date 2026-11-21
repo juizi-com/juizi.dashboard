@@ -2,6 +2,7 @@
 
 [![PyPI](https://img.shields.io/pypi/v/juizi.dashboard?label=PyPI)](https://pypi.org/project/juizi.dashboard/)
 [![npm (beta)](https://img.shields.io/npm/v/volto-juizi-dashboard/beta?label=npm%20beta)](https://www.npmjs.com/package/volto-juizi-dashboard)
+[![Try it in Plone in a Box](https://img.shields.io/badge/Try%20it-Plone%20in%20a%20Box-0083be)](#try-it)
 
 An activity record for Plone 6 sites, and a dashboard in Volto's Site Setup
 that shows site administrators what happened: content actions and people's
@@ -16,6 +17,41 @@ Beta: being readied for live sites. Releases are on
 [npm](https://www.npmjs.com/package/volto-juizi-dashboard) (npm tag `beta`).
 
 ![The Activity dashboard in Site Setup: filtering by date range, content or people](https://github.com/user-attachments/assets/f745ddf4-d7b5-44bf-9df6-f747f09c2375)
+
+## Try it
+
+[Plone in a Box](https://github.com/tkimnguyen/plone-in-a-box) can set up a
+Plone 6 site with Juizi Dashboard on a cloud server of your own, with a
+`demo` login (Site Administrator) to share, in about 10 minutes. It uses your
+own cloud account: a small server costs a few cents an hour, and you delete it
+when you're done, which deletes the site too.
+
+- **Linode:** log in to [Cloud Manager](https://cloud.linode.com), open the
+  [Juizi Dashboard StackScript](https://cloud.linode.com/stackscripts/2318969)
+  and click **Deploy New Linode**. Choose **Ubuntu 26.04 LTS**, a region, a
+  1 GB Nanode and **No firewall**, set a root password, and click **Create
+  Linode**.
+- **AWS:** sign in to the [AWS console](https://console.aws.amazon.com/),
+  then open the
+  [prefilled Launch Stack form](https://us-east-1.console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/create/review?templateURL=https%3A%2F%2Fplone-in-a-box-templates.s3.us-east-1.amazonaws.com%2Flatest%2Fcloudformation.yaml&stackName=juizi-dashboard-demo&param_FrontendImage=ghcr.io%2Fcollective%2Fplone-in-a-box-frontend%3A19-juizi-dashboard&param_DemoUser=demo),
+  set an admin password, and click **Create stack**. A `t3.small` server
+  costs more than the other providers' 1 GB ones.
+- **DigitalOcean or Hetzner:** create an Ubuntu 26.04 server (1 GB) and
+  paste this into **Startup scripts** (DigitalOcean) or **Cloud config**
+  (Hetzner), replacing `CHANGE-ME` with an admin password of at least 12
+  characters:
+
+      #!/bin/bash
+      export ADMIN_PASSWORD='CHANGE-ME'
+      export FRONTEND_IMAGE='ghcr.io/collective/plone-in-a-box-frontend:19-juizi-dashboard'
+      export DEMO_USER='demo'
+      curl -fsSL --retry 10 --retry-all-errors -o /root/plone-in-a-box.sh https://raw.githubusercontent.com/tkimnguyen/plone-in-a-box/2.13/src/StackScript && bash /root/plone-in-a-box.sh
+
+Then open the server's IP address in a browser to watch setup. The admin and
+demo passwords are in `/root/plone-credentials.txt` on the server: open the
+provider's browser console (Linode's **Launch LISH Console**, for example) and
+run `sudo cat /root/plone-credentials.txt`. Log in, and open Site Setup →
+**Activity**. Juizi Dashboard is already installed on the site.
 
 ## Installing
 
