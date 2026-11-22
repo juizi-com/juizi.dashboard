@@ -20,34 +20,37 @@ Beta: being readied for live sites. Releases are on
 
 ## Try it
 
-[Plone in a Box](https://github.com/tkimnguyen/plone-in-a-box) can set up a
-Plone 6 site with Juizi Dashboard on a cloud server of your own, in about 10
-minutes, with a `demo` login to share. The demo login is an **Editor** (it
-can add and change content) and a **Site Activity Viewer** (it can see the
-dashboard), but not an administrator. It uses your own cloud account: a small
-server costs a few cents an hour, and you delete it when you're done, which
-deletes the site too.
+[![Launch Stack on AWS](https://s3.amazonaws.com/cloudformation-examples/cloudformation-launch-stack.png)](https://us-east-1.console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/create/review?templateURL=https%3A%2F%2Fplone-in-a-box-templates.s3.us-east-1.amazonaws.com%2Flatest%2Fcloudformation.yaml&stackName=juizi-dashboard-demo&param_FrontendImage=ghcr.io%2Fcollective%2Fplone-in-a-box-frontend%3A19-juizi-dashboard&param_DemoUser=demo)
+[![Deploy on Linode](https://img.shields.io/badge/Deploy%20on-Linode-00a95c?logo=akamai&logoColor=white&style=for-the-badge)](https://cloud.linode.com/stackscripts/2318969)
 
-You can choose the demo login's password when you create the server
-(**Demo login password**, at least 12 characters), or leave it empty and
-read the one setup makes up (see below).
+Get your own Plone 6 site with Juizi Dashboard in about 10 minutes, set up by
+[Plone in a Box](https://github.com/tkimnguyen/plone-in-a-box) on your own
+cloud account. A small server costs a few cents an hour; delete it when
+you're done.
 
-- **Linode:** log in to [Cloud Manager](https://cloud.linode.com), open the
-  [Juizi Dashboard StackScript](https://cloud.linode.com/stackscripts/2318969)
-  and click **Deploy New Linode**. Fill in **Demo login password** if you
-  like. Choose **Ubuntu 26.04 LTS**, a region, a 1 GB Nanode and **No
-  firewall**, set a root password, and click **Create Linode**.
-- **AWS:** sign in to the [AWS console](https://console.aws.amazon.com/),
-  then open the
-  [prefilled Launch Stack form](https://us-east-1.console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/create/review?templateURL=https%3A%2F%2Fplone-in-a-box-templates.s3.us-east-1.amazonaws.com%2Flatest%2Fcloudformation.yaml&stackName=juizi-dashboard-demo&param_FrontendImage=ghcr.io%2Fcollective%2Fplone-in-a-box-frontend%3A19-juizi-dashboard&param_DemoUser=demo),
-  set an admin password (and a **Demo login password** if you like), and
-  click **Create stack**. A `t3.small` server costs more than the other
-  providers' 1 GB ones.
-- **DigitalOcean or Hetzner:** create an Ubuntu 26.04 server (1 GB) and
-  paste this into **Startup scripts** (DigitalOcean) or **Cloud config**
-  (Hetzner), replacing `CHANGE-ME` with an admin password and
-  `CHANGE-ME-TOO` with a demo password, each at least 12 characters (or
-  delete the `DEMO_PASSWORD` line to have one made up):
+1. Click a button and sign in. Fill in an admin password and a **Demo login
+   password** (each at least 12 characters), and create the server.
+2. Open the server's address. When the site appears, log in as `demo` with
+   your demo password, and open **Activity** in the user menu.
+
+The `demo` login is an Editor and a Site Activity Viewer: it can add and
+change content and watch it appear on the dashboard, but isn't an
+administrator. Share it with whoever you want to try it.
+
+<details>
+<summary>Step by step, DigitalOcean and Hetzner, and finding the password</summary>
+
+- **Linode:** the button opens the StackScript; click **Deploy New Linode**.
+  Choose **Ubuntu 26.04 LTS**, a region, a 1 GB Nanode and **No firewall**,
+  set a root password, and click **Create Linode**.
+- **AWS:** the button opens a Launch Stack form with Juizi Dashboard and the
+  demo login filled in. Set the passwords, click **Create stack**, and open
+  the **SiteURL** on its **Outputs** tab. A `t3.small` server costs more
+  than the other providers' 1 GB ones.
+- **DigitalOcean or Hetzner** (no button): create an Ubuntu 26.04 server
+  (1 GB) and paste this into **Startup scripts** (DigitalOcean) or **Cloud
+  config** (Hetzner), replacing `CHANGE-ME` with an admin password and
+  `CHANGE-ME-TOO` with a demo password, each at least 12 characters:
 
       #!/bin/bash
       export ADMIN_PASSWORD='CHANGE-ME'
@@ -56,31 +59,23 @@ read the one setup makes up (see below).
       export DEMO_PASSWORD='CHANGE-ME-TOO'
       curl -fsSL --retry 10 --retry-all-errors -o /root/plone-in-a-box.sh https://raw.githubusercontent.com/tkimnguyen/plone-in-a-box/2.14/src/StackScript && bash /root/plone-in-a-box.sh
 
-Then open the server's IP address in a browser to watch setup. When the site
-appears, log in with the demo login:
+**Left the demo password empty, or forgot it?** Setup made one up, which
+isn't shown anywhere on the website. Either:
+- **read it on the server:** open your provider's browser console (Linode's
+  **Launch LISH Console**, DigitalOcean's **Access → Launch Droplet
+  Console**, AWS's **Connect → EC2 Instance Connect**, or Hetzner's **>_
+  Console**) and run `sudo cat /root/plone-credentials.txt`. The demo line
+  has the password after the `/`:
 
-1. **Username:** `demo`.
-2. **Password:** the one you chose. If you left it empty, setup made one up,
-   which isn't shown anywhere on the website. Either:
-   - **read it on the server:** open your provider's browser console
-     (Linode's **Launch LISH Console**, DigitalOcean's **Access → Launch
-     Droplet Console**, AWS's **Connect → EC2 Instance Connect**, or
-     Hetzner's **>_ Console**) and run `sudo cat /root/plone-credentials.txt`.
-     Its demo line has the username, then the password after the `/`:
+      Demo login: demo / 7Gq2v8xRmT4pLwZs9KcN (Editor, Site Activity Viewer)
 
-         Demo login: demo / 7Gq2v8xRmT4pLwZs9KcN (Editor, Site Activity Viewer)
+- **or set a new one as admin:** log in as `admin`, open Site Setup →
+  **Users**, click `demo`, and change its password.
 
-   - **or set a new one as admin:** log in as `admin` with the admin
-     password, open Site Setup → **Users**, click `demo`, and change its
-     password.
-3. Click **Log in** on the site, enter `demo` and the password, then open
-   **Activity** in your user menu (the person icon at the bottom of the
-   toolbar). Juizi Dashboard is already installed.
+The dashboard also shows everyone's logins on the demo site, so share the
+demo login only with people you trust.
 
-Give the demo username and password to the people you want to try it. They
-can add and edit content, and watch their changes appear on the dashboard,
-which also shows everyone's logins on that site. Delete the server when
-you're done.
+</details>
 
 ## Installing
 
