@@ -2,7 +2,7 @@
 
 [![PyPI](https://img.shields.io/pypi/v/juizi.dashboard?label=PyPI)](https://pypi.org/project/juizi.dashboard/)
 [![npm (beta)](https://img.shields.io/npm/v/volto-juizi-dashboard/beta?label=npm%20beta)](https://www.npmjs.com/package/volto-juizi-dashboard)
-[![Try it in Plone in a Box](https://img.shields.io/badge/Try%20it-Plone%20in%20a%20Box-0083be)](#try-it)
+[![Try It in Plone in a Box](https://img.shields.io/badge/Try%20It-Plone%20in%20a%20Box-0083be)](#try-it)
 
 An activity record for Plone 6 sites, and a dashboard in Volto's Site Setup
 that shows site administrators what happened: content actions and people's
@@ -18,7 +18,7 @@ Beta: being readied for live sites. Releases are on
 
 ![The Activity dashboard in Site Setup: filtering by date range, content or people](https://github.com/user-attachments/assets/f745ddf4-d7b5-44bf-9df6-f747f09c2375)
 
-## Try it
+## Try It
 
 [![Launch Stack on AWS](https://s3.amazonaws.com/cloudformation-examples/cloudformation-launch-stack.png)](https://us-east-1.console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/create/review?templateURL=https%3A%2F%2Fplone-in-a-box-templates.s3.us-east-1.amazonaws.com%2Flatest%2Fcloudformation.yaml&stackName=juizi-dashboard-demo&param_FrontendImage=ghcr.io%2Fcollective%2Fplone-in-a-box-frontend%3A19-juizi-dashboard&param_DemoUser=demo)
 [![Deploy on Linode](https://img.shields.io/badge/Deploy%20on-Linode-00a95c?logo=akamai&logoColor=white&style=for-the-badge)](https://cloud.linode.com/stackscripts/2318969)

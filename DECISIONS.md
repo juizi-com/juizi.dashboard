@@ -516,7 +516,7 @@ the registry and environment setup there.
 Only Manager and Site Administrator could see the dashboard, so letting
 someone look meant giving them nearly full control of the site. That rules
 out an auditor who should only read, and a demo login that people can try
-the add-on with (Plone in a Box's Try it sites).
+the add-on with (Plone in a Box's "Try It" sites).
 
 The add-on now adds a role, **Site Activity Viewer**, with only "View site
 activity": the dashboard, its CSV and the Person box suggestions. Not the
