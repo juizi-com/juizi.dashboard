@@ -1,9 +1,14 @@
 <?xml version="1.0"?>
+<!-- Site Activity Viewer can see the dashboard and nothing else (D29). -->
 <rolemap>
+  <roles>
+    <role name="Site Activity Viewer" />
+  </roles>
   <permissions>
     <permission name="juizi.dashboard: View site activity" acquire="True">
       <role name="Manager" />
       <role name="Site Administrator" />
+      <role name="Site Activity Viewer" />
     </permission>
     <permission name="juizi.dashboard: Manage activity record settings" acquire="True">
       <role name="Manager" />

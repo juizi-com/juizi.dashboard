@@ -1,7 +1,8 @@
 /**
  * Site Setup → Activity: one list of what happened on the site, newest
  * first, filtered by date range, with a CSV download of the same filters.
- * Site administrators only (the backend answers 401 to anyone else).
+ * Managers, Site Administrators and Site Activity Viewers (the backend
+ * answers 401 to anyone else). Viewers don't see the settings links (D29).
  */
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
@@ -311,11 +312,16 @@ const ActivityDashboard = () => {
 
       {data && !data.recording && (
         <div className="juizi-dashboard__error" role="status">
-          Recording is switched off, so nothing new is being added.{' '}
-          <NewTab to="/controlpanel/juizi-dashboard-settings">
-            Switch it on in the settings
-          </NewTab>
-          .
+          Recording is switched off, so nothing new is being added.
+          {data.can_manage && (
+            <>
+              {' '}
+              <NewTab to="/controlpanel/juizi-dashboard-settings">
+                Switch it on in the settings
+              </NewTab>
+              .
+            </>
+          )}
         </div>
       )}
 
@@ -543,8 +549,15 @@ const ActivityDashboard = () => {
       {data && (
         <p className="juizi-dashboard__hint juizi-activity__retention">
           Account activity is kept {keep(data.retention.account_days)} and
-          content actions {keep(data.retention.content_days)}.{' '}
-          <NewTab to="/controlpanel/juizi-dashboard-settings">Settings</NewTab>
+          content actions {keep(data.retention.content_days)}.
+          {data.can_manage && (
+            <>
+              {' '}
+              <NewTab to="/controlpanel/juizi-dashboard-settings">
+                Settings
+              </NewTab>
+            </>
+          )}
         </p>
       )}
 

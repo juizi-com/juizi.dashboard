@@ -5,6 +5,7 @@
  */
 import React from 'react';
 import { createPortal } from 'react-dom';
+import { useSelector } from 'react-redux';
 import { useHistory, useLocation } from 'react-router-dom';
 import { Button } from 'semantic-ui-react';
 import Icon from '@plone/volto/components/theme/Icon/Icon';
@@ -33,10 +34,16 @@ export const DashboardFooter = ({ name, version }) => (
 );
 
 // Back to Site Setup, in Volto's toolbar (as Volto's own control panels do).
+// Someone who can't open Site Setup, such as a Site Activity Viewer, goes
+// back to the home page instead (D29). The backend lists the plone_setup
+// user action only for people who may open Site Setup.
 export const BackToSiteSetup = () => {
   const isClient = useClient();
   const history = useHistory();
   const location = useLocation();
+  const canSetup = useSelector((state) =>
+    (state.actions?.actions?.user || []).some((a) => a.id === 'plone_setup'),
+  );
   if (!isClient) return null;
   const target = document.getElementById('toolbar');
   if (!target) return null;
@@ -47,9 +54,11 @@ export const BackToSiteSetup = () => {
       inner={
         <Button
           className="item"
-          aria-label="Back to Site Setup"
-          title="Back to Site Setup"
-          onClick={() => history.push(getParentUrl(location.pathname))}
+          aria-label={canSetup ? 'Back to Site Setup' : 'Back to the site'}
+          title={canSetup ? 'Back to Site Setup' : 'Back to the site'}
+          onClick={() =>
+            history.push(canSetup ? getParentUrl(location.pathname) : '/')
+          }
         >
           <Icon name={backSVG} className="contents circled" size="30px" />
         </Button>

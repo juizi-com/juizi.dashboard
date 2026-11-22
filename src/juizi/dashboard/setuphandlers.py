@@ -1,5 +1,6 @@
-"""Install and uninstall. Uninstalling removes the settings, the permission's
-roles and the Site Setup entry, and keeps the record, dormant (D1)."""
+"""Install, upgrades and uninstall. Uninstalling removes the settings, the
+permissions' roles, the Site Activity Viewer role, the Site Setup entry and
+the user-menu entry, and keeps the record, dormant (D1, D29)."""
 from plone.base.interfaces import INonInstallable
 from Products.CMFCore.utils import getToolByName
 from Products.GenericSetup.tool import UNKNOWN
@@ -12,6 +13,7 @@ from juizi.dashboard.recorder import write
 
 
 DEFAULT_PROFILE = 'juizi.dashboard:default'
+VIEWER_ROLE = 'Site Activity Viewer'
 
 
 def is_installed_here():
@@ -50,3 +52,20 @@ def post_install(setup_tool):
 
 def post_uninstall(setup_tool):
     write(RECORD, 'addon.uninstalled', force=True)
+    remove_viewer_role(getSite())
+
+
+def remove_viewer_role(site):
+    """The role grants nothing once uninstalled, so it goes, with everyone's
+    assignments of it: a reinstall starts without viewers (D29)."""
+    roles = site.acl_users.portal_role_manager
+    if VIEWER_ROLE in roles.listRoleIds():
+        roles.removeRole(VIEWER_ROLE)
+    if VIEWER_ROLE in site.__ac_roles__:
+        site._delRoles([VIEWER_ROLE])
+
+
+def upgrade_1001(setup_tool):
+    """The Site Activity Viewer role and the user-menu entry (D29)."""
+    setup_tool.runImportStepFromProfile('profile-' + DEFAULT_PROFILE, 'rolemap')
+    setup_tool.runImportStepFromProfile('profile-' + DEFAULT_PROFILE, 'actions')

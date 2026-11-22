@@ -1,6 +1,7 @@
 """Through the REST API, as Volto uses it."""
-from datetime import date
+from datetime import datetime
 from datetime import timedelta
+from datetime import timezone
 from plone import api
 from plone.app.testing import setRoles
 from plone.app.testing import SITE_OWNER_NAME
@@ -71,7 +72,8 @@ class TestActivityService(unittest.TestCase):
         self.portal = self.layer['portal']
         self.base = '/' + self.portal.getId()
         setRoles(self.portal, TEST_USER_ID, ['Manager'])
-        for name, roles in (('siteadmin', ['Site Administrator']), ('editor', ['Editor'])):
+        for name, roles in (('siteadmin', ['Site Administrator']), ('editor', ['Editor']),
+                            ('viewer', ['Site Activity Viewer'])):
             api.user.create(email=f'{name}@example.com', username=name,
                             password='Secret-pass-1', roles=roles,
                             properties={'fullname': name.title()})
@@ -100,6 +102,24 @@ class TestActivityService(unittest.TestCase):
         self.assertEqual(self.session().get('@activity').status_code, 401)
         self.assertEqual(self.session('editor').get('@activity').status_code, 401)
         self.assertEqual(self.session('siteadmin').get('@activity').status_code, 200)
+
+    def test_site_activity_viewer(self):
+        s = self.session('viewer')
+        r = s.get('@activity')
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertFalse(r.json()['can_manage'])
+        self.assertTrue(self.session('siteadmin').get('@activity').json()['can_manage'])
+        self.assertEqual(s.get('@activity', params={'format': 'csv'}).status_code, 200)
+        self.assertEqual(s.get('@activity-people', params={'q': 'ed'}).status_code, 200)
+        # Nothing else: not the settings, nor Site Setup.
+        self.assertEqual(s.get('@controlpanels/juizi-dashboard-settings').status_code, 401)
+        self.assertEqual(s.get('@controlpanels').status_code, 401)
+        # The user menu's Activity entry is there for them, not for an editor.
+        def user_actions(session):
+            return [a['id'] for a in session.get('@actions').json()['user']]
+        self.assertIn('juizi-activity', user_actions(s))
+        self.assertNotIn('plone_setup', user_actions(s))
+        self.assertNotIn('juizi-activity', user_actions(self.session('editor')))
 
     def test_volto_login_and_logout_with_address(self):
         s = self.session('editor')
@@ -156,7 +176,7 @@ class TestActivityService(unittest.TestCase):
     def test_date_range_and_category(self):
         api.content.create(container=self.portal, type='Document', id='p', title='P')
         transaction.commit()
-        today = date.today()
+        today = datetime.now(timezone.utc).date()  # the test site's time zone
         self.assertEqual(self.events(category='content')['total'], 1)
         old = self.events(**{'from': (today - timedelta(days=60)).isoformat(),
                              'to': (today - timedelta(days=30)).isoformat()})

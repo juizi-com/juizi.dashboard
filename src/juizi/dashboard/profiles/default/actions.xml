@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<!-- An Activity entry in the user menu, for people who can see the
+     dashboard but not Site Setup (D29). Volto shows it through
+     volto-juizi-dashboard's ActivityMenuItem. -->
+<object name="portal_actions" xmlns:i18n="http://xml.zope.org/namespaces/i18n">
+  <object name="user" meta_type="CMF Action Category">
+    <object name="juizi-activity" meta_type="CMF Action" i18n:domain="juizi.dashboard"
+            insert-after="plone_setup">
+      <property name="title" i18n:translate="">Activity</property>
+      <property name="description" i18n:translate="">What happened on this site</property>
+      <property name="url_expr">string:${portal_url}/controlpanel/activity</property>
+      <property name="link_target"></property>
+      <property name="icon_expr"></property>
+      <property name="available_expr"></property>
+      <property name="permissions">
+        <element value="juizi.dashboard: View site activity" />
+      </property>
+      <property name="visible">True</property>
+    </object>
+  </object>
+</object>

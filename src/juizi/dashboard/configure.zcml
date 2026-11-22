@@ -32,6 +32,13 @@
       provides="Products.GenericSetup.interfaces.EXTENSION"
       post_handler=".setuphandlers.post_uninstall"
       />
+  <genericsetup:upgradeStep
+      source="1000"
+      destination="1001"
+      profile="juizi.dashboard:default"
+      title="Site Activity Viewer role and the Activity entry in the user menu"
+      handler=".setuphandlers.upgrade_1001"
+      />
   <utility factory=".setuphandlers.HiddenProfiles" name="juizi.dashboard-hiddenprofiles" />
 
   <plone:service method="GET" name="@activity" for="plone.base.interfaces.IPloneSiteRoot"
