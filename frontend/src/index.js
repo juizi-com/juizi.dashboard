@@ -1,4 +1,5 @@
 import ActivityDashboard from './components/ActivityDashboard';
+import ActivityMenuItem from './components/ActivityMenuItem';
 import offerAddon, { availableAddon } from './offerAddon';
 import packageJson from '../package.json';
 
@@ -6,6 +7,13 @@ const applyConfig = (config) => {
   config.settings.controlpanels = [
     ...(config.settings.controlpanels || []),
     { '@id': '/activity', group: 'Add-on Configuration', title: 'Activity' },
+  ];
+
+  // The user menu's Activity entry, for people who can see the dashboard
+  // but not Site Setup (D29).
+  config.settings.appExtras = [
+    ...(config.settings.appExtras || []),
+    { match: '', component: ActivityMenuItem },
   ];
 
   config.addonRoutes = [

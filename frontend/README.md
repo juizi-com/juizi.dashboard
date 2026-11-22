@@ -21,11 +21,14 @@ It needs the backend package too: this screen only shows what
 3. Install **Juizi Dashboard** on the site in Site Setup → Add-ons, and set
    the site's time zone in Site Setup → Date and Time if it hasn't been set.
 
-The [main README](https://github.com/juizi-com/juizi.dashboard#readme) has
+The [main README](https://github.com/tkimnguyen/juizi.dashboard#readme) has
 the details, including uninstalling and the server script.
 
-**Site Setup → Activity** (`/controlpanel/activity`) is for Manager and Site
-Administrator. It shows one list of what happened on the site, newest first:
+**Site Setup → Activity** (`/controlpanel/activity`) is for Manager, Site
+Administrator and Site Activity Viewer, a role the backend adds for people
+who should see the dashboard and nothing else. They reach it from
+**Activity** in the toolbar's user menu, since they can't open Site Setup,
+and don't see the links to the settings. It shows one list of what happened on the site, newest first:
 
 - **Columns:** type (Content, People, Record), when, who (with the IP
   address for account events, if the site records it), what, and details:
@@ -55,7 +58,7 @@ the settings (Site Setup → Activity record settings).
   `JUIZI_DASHBOARD_ACCOUNT_RETENTION_DAYS` and
   `JUIZI_DASHBOARD_CONTENT_RETENTION_DAYS`, never on the website. Entries
   can only be cleared there too, with the `juizi-dashboard-record` script.
-  See the [main README](https://github.com/juizi-com/juizi.dashboard#readme).
+  See the [main README](https://github.com/tkimnguyen/juizi.dashboard#readme).
 - **What Plone doesn't report, so isn't recorded:**
   - failed logins;
   - role changes made in classic Users and Groups or the ZMI (changes made

@@ -4,6 +4,7 @@ Read-only. Parameters: from, to (YYYY-MM-DD, the site's time zone) or
 days (the last N days up to today),
 category (content, account, record), person (a user or group id), page,
 size, and format=csv for the download."""
+from plone import api
 from plone.restapi.services import Service
 
 from juizi.dashboard.present import CSV_LIMIT
@@ -85,6 +86,9 @@ class Activity(Service):
             'retention': {'account_days': retention_days('account'),
                           'content_days': retention_days('content')},
             'started': _started(record),
+            # Site Activity Viewers can't open the settings: hide the links (D29).
+            'can_manage': bool(api.user.has_permission(
+                'juizi.dashboard: Manage activity record settings', obj=self.context)),
         }
 
 

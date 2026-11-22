@@ -21,37 +21,66 @@ Beta: being readied for live sites. Releases are on
 ## Try it
 
 [Plone in a Box](https://github.com/tkimnguyen/plone-in-a-box) can set up a
-Plone 6 site with Juizi Dashboard on a cloud server of your own, with a
-`demo` login (Site Administrator) to share, in about 10 minutes. It uses your
-own cloud account: a small server costs a few cents an hour, and you delete it
-when you're done, which deletes the site too.
+Plone 6 site with Juizi Dashboard on a cloud server of your own, in about 10
+minutes, with a `demo` login to share. The demo login is an **Editor** (it
+can add and change content) and a **Site Activity Viewer** (it can see the
+dashboard), but not an administrator. It uses your own cloud account: a small
+server costs a few cents an hour, and you delete it when you're done, which
+deletes the site too.
+
+You can choose the demo login's password when you create the server
+(**Demo login password**, at least 12 characters), or leave it empty and
+read the one setup makes up (see below).
 
 - **Linode:** log in to [Cloud Manager](https://cloud.linode.com), open the
   [Juizi Dashboard StackScript](https://cloud.linode.com/stackscripts/2318969)
-  and click **Deploy New Linode**. Choose **Ubuntu 26.04 LTS**, a region, a
-  1 GB Nanode and **No firewall**, set a root password, and click **Create
-  Linode**.
+  and click **Deploy New Linode**. Fill in **Demo login password** if you
+  like. Choose **Ubuntu 26.04 LTS**, a region, a 1 GB Nanode and **No
+  firewall**, set a root password, and click **Create Linode**.
 - **AWS:** sign in to the [AWS console](https://console.aws.amazon.com/),
   then open the
   [prefilled Launch Stack form](https://us-east-1.console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/create/review?templateURL=https%3A%2F%2Fplone-in-a-box-templates.s3.us-east-1.amazonaws.com%2Flatest%2Fcloudformation.yaml&stackName=juizi-dashboard-demo&param_FrontendImage=ghcr.io%2Fcollective%2Fplone-in-a-box-frontend%3A19-juizi-dashboard&param_DemoUser=demo),
-  set an admin password, and click **Create stack**. A `t3.small` server
-  costs more than the other providers' 1 GB ones.
+  set an admin password (and a **Demo login password** if you like), and
+  click **Create stack**. A `t3.small` server costs more than the other
+  providers' 1 GB ones.
 - **DigitalOcean or Hetzner:** create an Ubuntu 26.04 server (1 GB) and
   paste this into **Startup scripts** (DigitalOcean) or **Cloud config**
-  (Hetzner), replacing `CHANGE-ME` with an admin password of at least 12
-  characters:
+  (Hetzner), replacing `CHANGE-ME` with an admin password and
+  `CHANGE-ME-TOO` with a demo password, each at least 12 characters (or
+  delete the `DEMO_PASSWORD` line to have one made up):
 
       #!/bin/bash
       export ADMIN_PASSWORD='CHANGE-ME'
       export FRONTEND_IMAGE='ghcr.io/collective/plone-in-a-box-frontend:19-juizi-dashboard'
       export DEMO_USER='demo'
-      curl -fsSL --retry 10 --retry-all-errors -o /root/plone-in-a-box.sh https://raw.githubusercontent.com/tkimnguyen/plone-in-a-box/2.13/src/StackScript && bash /root/plone-in-a-box.sh
+      export DEMO_PASSWORD='CHANGE-ME-TOO'
+      curl -fsSL --retry 10 --retry-all-errors -o /root/plone-in-a-box.sh https://raw.githubusercontent.com/tkimnguyen/plone-in-a-box/2.14/src/StackScript && bash /root/plone-in-a-box.sh
 
-Then open the server's IP address in a browser to watch setup. The admin and
-demo passwords are in `/root/plone-credentials.txt` on the server: open the
-provider's browser console (Linode's **Launch LISH Console**, for example) and
-run `sudo cat /root/plone-credentials.txt`. Log in, and open Site Setup →
-**Activity**. Juizi Dashboard is already installed on the site.
+Then open the server's IP address in a browser to watch setup. When the site
+appears, log in with the demo login:
+
+1. **Username:** `demo`.
+2. **Password:** the one you chose. If you left it empty, setup made one up,
+   which isn't shown anywhere on the website. Either:
+   - **read it on the server:** open your provider's browser console
+     (Linode's **Launch LISH Console**, DigitalOcean's **Access → Launch
+     Droplet Console**, AWS's **Connect → EC2 Instance Connect**, or
+     Hetzner's **>_ Console**) and run `sudo cat /root/plone-credentials.txt`.
+     Its demo line has the username, then the password after the `/`:
+
+         Demo login: demo / 7Gq2v8xRmT4pLwZs9KcN (Editor, Site Activity Viewer)
+
+   - **or set a new one as admin:** log in as `admin` with the admin
+     password, open Site Setup → **Users**, click `demo`, and change its
+     password.
+3. Click **Log in** on the site, enter `demo` and the password, then open
+   **Activity** in your user menu (the person icon at the bottom of the
+   toolbar). Juizi Dashboard is already installed.
+
+Give the demo username and password to the people you want to try it. They
+can add and edit content, and watch their changes appear on the dashboard,
+which also shows everyone's logins on that site. Delete the server when
+you're done.
 
 ## Installing
 
@@ -72,9 +101,20 @@ run `sudo cat /root/plone-credentials.txt`. Log in, and open Site Setup →
 4. Open Site Setup → **Activity**. Its settings (recording on or off, IP
    addresses, comment text) are under Site Setup → Activity record settings.
 
-Who can see it: Manager and Site Administrator, through the permissions
-"juizi.dashboard: View site activity" and "juizi.dashboard: Manage activity
-record settings".
+Who can see it:
+- **Manager and Site Administrator** see the dashboard and can change its
+  settings.
+- **Site Activity Viewer**, a role this add-on adds, sees the dashboard and
+  nothing else: no settings, no Site Setup, no editing. Give it in Site
+  Setup → Users to someone who should see what happened without being an
+  administrator, such as an auditor, or a demo login. They open the dashboard
+  from **Activity** in their user menu (the toolbar's person icon), and can
+  hold it alongside other roles, such as Editor.
+
+The permissions are "juizi.dashboard: View site activity" (all three roles)
+and "juizi.dashboard: Manage activity record settings" (Manager and Site
+Administrator). Uninstalling removes the Site Activity Viewer role and
+everyone's assignments of it.
 
 ## Uninstalling
 
@@ -165,3 +205,7 @@ Global role changes made in Volto's Users screen *are* recorded.
 
 Browser scenarios run on the payments test bench: `make -C e2e dashboard`,
 on the `dashboard-test` site with the frontend on :3004.
+
+Releases to PyPI and npm are published from the
+[tkimnguyen/juizi.dashboard](https://github.com/tkimnguyen/juizi.dashboard) fork; see its
+[RELEASING.md](https://github.com/tkimnguyen/juizi.dashboard/blob/main/RELEASING.md).

@@ -491,3 +491,56 @@ matters more than a complete trail.
 
 **Raised in the security review, 2026-10-11, and built at the user's
 request.**
+
+## D28. Released from the fork, with trusted publishing
+
+`juizi.dashboard` is on PyPI and `volto-juizi-dashboard` on npm. Both are
+published by a GitHub Actions workflow in the tkimnguyen fork when a
+GitHub Release is published there
+([RELEASING.md](https://github.com/tkimnguyen/juizi.dashboard/blob/main/RELEASING.md)):
+- no tokens are stored: PyPI and npm trust that workflow (OIDC);
+- each publish waits for the maintainer's approval;
+- npm versions carry provenance, linking each one to the run that built
+  it, so npm's `repository.url` names the fork;
+- publishing npm by hand needs two-factor authentication, and tokens
+  can't publish.
+
+*Trade-off:* the fork, not juizi-com, is the source of releases, and npm
+links to the fork. Moving publishing to juizi-com later means repeating
+the registry and environment setup there.
+
+**Decided 2026-11-21, at the user's request.**
+
+## D29. A Site Activity Viewer role, for seeing the dashboard without admin rights
+
+Only Manager and Site Administrator could see the dashboard, so letting
+someone look meant giving them nearly full control of the site. That rules
+out an auditor who should only read, and a demo login that people can try
+the add-on with (Plone in a Box's Try it sites).
+
+The add-on now adds a role, **Site Activity Viewer**, with only "View site
+activity": the dashboard, its CSV and the Person box suggestions. Not the
+settings, Site Setup, or anything else. It's a site-wide role, given in
+Site Setup → Users, and can be held with others (a demo login gets Editor
+too, so people can make changes and watch them appear).
+- Plone roles can't contain other roles, so Site Administrator doesn't
+  "hold" the new role: it keeps the permission directly, as Manager does.
+- **Finding the dashboard:** a viewer can't open Site Setup, so an
+  **Activity** entry is added to the toolbar's user menu. It's a `user`
+  portal action that needs the view permission, so the backend offers it
+  only to those who can use it; the frontend shows it through Volto's
+  `toolbar-user-menu` pluggable (Volto 18 and 19). Admins see it too, as a
+  shortcut.
+- **On the page:** `@activity` answers `can_manage`, and the links to the
+  settings are left out for viewers. The toolbar's back button goes to the
+  home page for anyone without Site Setup.
+- **Uninstalling** removes the role and everyone's assignments of it, and
+  the menu entry. A reinstall starts with no viewers.
+- **Upgrading** from 1000 (1.0.0b1 and b2) adds the role and the menu entry
+  (upgrade step to 1001).
+
+*Trade-off:* viewers see everything the dashboard shows, including people's
+logins and IP addresses, if the site records them. That's the point of the
+role, but it's personal data: give it as carefully as Site Administrator.
+
+**Decided 2026-11-21, at the user's request.**

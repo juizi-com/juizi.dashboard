@@ -30,14 +30,18 @@ class TestSetup(unittest.TestCase):
         return sorted(r['name'] for r in self.portal.rolesOfPermission(permission)
                       if r['selected'])
 
+    def user_actions(self):
+        return self.portal.portal_actions.user.objectIds()
+
     def events(self):
         record = get_record(self.portal)
         return [record.entries[k]['event'] for k in record.entries.keys()]
 
     def test_installed(self):
         self.assertTrue(self.installer.is_product_installed('juizi.dashboard'))
-        self.assertEqual(self.roles(), ['Manager', 'Site Administrator'])
+        self.assertEqual(self.roles(), ['Manager', 'Site Activity Viewer', 'Site Administrator'])
         self.assertEqual(self.roles(SETTINGS), ['Manager', 'Site Administrator'])
+        self.assertIn('juizi-activity', self.user_actions())
         self.assertTrue(api.portal.get_registry_record('juizi.dashboard.recording'))
         self.assertEqual(self.events(), ['addon.installed'])
         self.assertIn('juizi-dashboard-settings',
@@ -53,6 +57,10 @@ class TestSetup(unittest.TestCase):
         self.assertEqual(self.roles(SETTINGS), ['Manager'])
         self.assertNotIn('juizi-dashboard-settings',
                          [a.getId() for a in self.portal.portal_controlpanel.listActions()])
+        self.assertNotIn('juizi-activity', self.user_actions())
+        self.assertNotIn('Site Activity Viewer', self.portal.validRoles())
+        self.assertNotIn('Site Activity Viewer',
+                         self.portal.acl_users.portal_role_manager.listRoleIds())
         # Dormant: kept, and nothing more is written.
         api.content.create(container=self.portal, type='Document', id='q', title='Q')
         self.assertEqual(self.events(), ['addon.installed', 'content.created',
@@ -60,6 +68,29 @@ class TestSetup(unittest.TestCase):
         self.installer.install_product('juizi.dashboard')
         self.assertEqual(self.events()[-1], 'addon.reinstalled')
         self.assertEqual(len(self.events()), 4)
+
+    def test_viewer_role_can_be_granted_and_goes_on_uninstall(self):
+        api.user.create(email='val@example.com', username='val')
+        api.user.grant_roles(username='val', roles=['Site Activity Viewer'])
+        self.assertIn('Site Activity Viewer', api.user.get_roles(username='val'))
+        self.installer.uninstall_product('juizi.dashboard')
+        self.assertNotIn('Site Activity Viewer', api.user.get_roles(username='val'))
+        self.installer.install_product('juizi.dashboard')
+        self.assertNotIn('Site Activity Viewer', api.user.get_roles(username='val'))
+        api.user.grant_roles(username='val', roles=['Site Activity Viewer'])
+        self.assertIn('Site Activity Viewer', api.user.get_roles(username='val'))
+
+    def test_upgrade_1001_from_1000(self):
+        from juizi.dashboard.setuphandlers import remove_viewer_role
+        from juizi.dashboard.setuphandlers import upgrade_1001
+        setup = self.portal.portal_setup
+        self.portal.portal_actions.user.manage_delObjects(['juizi-activity'])
+        remove_viewer_role(self.portal)
+        self.portal.manage_permission(PERMISSION, ['Manager', 'Site Administrator'], 1)
+        setup.setLastVersionForProfile('juizi.dashboard:default', '1000')
+        upgrade_1001(setup)
+        self.assertEqual(self.roles(), ['Manager', 'Site Activity Viewer', 'Site Administrator'])
+        self.assertIn('juizi-activity', self.user_actions())
 
     def test_purge_refused_while_installed(self):
         with self.assertRaises(SystemExit):

@@ -14,7 +14,9 @@ shown to site administrators as one list.
   people, and to one person.
 - **CSV download** of exactly what the filters select.
 - **Site administrators only:** Site Administrator and Manager. There's no
-  dashboard for other users in this version.
+  dashboard for other users in this version. (Since 1.0.0b3, also the
+  Site Activity Viewer role, which sees the dashboard and nothing else:
+  DECISIONS.md, D29.)
 - **Plone 6 with plain Volto.** It doesn't depend on Volto Light Theme or any
   kitconcept package.
 - **Installs and uninstalls cleanly** from Site Setup → Add-ons.
